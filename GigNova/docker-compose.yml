@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8889:8000"
+    environment:
+      - PORT=8000
+      - DEV_MODE=true
+      - ENVIRONMENT=dev
+      - JWT_SECRET=${JWT_SECRET:-gignova_jwt_secret_for_development_only}
+    volumes:
+      - ~/.gignova:/root/.gignova
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://backend:8000/api/v1
+    restart: unless-stopped
+  #   environment:
+  #     - REACT_APP_API_URL=http://backend:8000/api/v1
+  #   depends_on:
+  #     - backend

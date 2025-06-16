@@ -1,0 +1,557 @@
+# GigNova Requirements
+# Note: Using local implementations for vector database and file storage instead of Qdrant and IPFS
+# Core Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Authentication & Security
+pyjwt==2.8.0
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
+
+# AI/ML Dependencies
+# openai==1.3.5 - Removed in favor of template-based approach
+sentence-transformers==2.2.2
+torch==2.1.1
+torchvision==0.16.1
+torchaudio==2.1.1
+transformers==4.35.2
+numpy==1.24.3
+scikit-learn==1.3.2
+
+# Blockchain & Web3
+web3==6.11.3
+eth-account==0.9.0
+py-solc-x==1.12.0
+eth-utils==2.3.0
+
+# Vector Database - Using in-memory implementation instead of Qdrant
+# qdrant-client==1.6.9
+
+# File Storage - Using local filesystem instead of IPFS
+# ipfshttpclient==0.8.0a2
+
+# Database & Caching
+redis==5.0.1
+aioredis==2.0.1
+
+# Environment & Configuration
+python-dotenv==1.0.0
+pydantic==2.5.0
+pydantic-settings==2.0.3
+
+# Background Tasks & Scheduling
+schedule==1.2.0
+celery==5.3.4
+
+# HTTP & API
+httpx==0.25.2
+aiohttp==3.9.1
+requests==2.31.0
+
+# Data Processing
+pandas==2.1.3
+jsonschema==4.20.0
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2023.3
+uuid==1.30
+
+# Testing (Optional)
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
+
+# Development Tools (Optional)
+black==23.11.0
+flake8==6.1.0
+mypy==1.7.1
+
+# Monitoring & Logging
+structlog==23.2.0
+rich==13.7.0
+
+# Additional ML/AI Libraries
+langchain==0.0.340
+langchain-community==0.0.6
+langchain-core==0.1.0
+autogen-agentchat==0.2.0
+
+# Image Processing (for QA validation)
+Pillow==10.1.0
+opencv-python==4.8.1.78
+
+# Audio Processing (for multimedia deliverables)
+librosa==0.10.1
+soundfile==1.0.1
+
+# File Processing
+python-magic==0.4.27
+
+# Async Support
+asyncio==3.4.3
+aiofiles==23.2.1
+
+# Production WSGI Server
+gunicorn==21.2.0
+
+# Database Connectors (if using traditional DB alongside vector DB)
+sqlalchemy==2.0.23
+alembic==1.12.1
+asyncpg==0.29.0  # PostgreSQL async driver
+aiomysql==0.2.0  # MySQL async driver
+
+# Message Queue (for background processing)
+kombu==5.3.4
+billiard==4.2.0
+
+# Configuration Management
+dynaconf==3.2.4
+
+# API Documentation
+swagger-ui-bundle==0.0.9
+
+# Performance Monitoring
+prometheus-client==0.19.0
+
+# Rate Limiting
+slowapi==0.1.9
+
+# CORS and Security Headers
+python-cors==1.0.0
+
+# Email (for notifications)
+aiosmtplib==3.0.1
+jinja2==3.1.2
+
+# Cryptography
+cryptography==41.0.7
+hashlib-compat==1.0.1
+
+# Time Series (for metrics)
+influxdb-client==1.38.0
+
+# GraphQL (optional API layer)
+strawberry-graphql[fastapi]==0.213.0
+
+# Websockets (for real-time updates)
+websockets==12.0
+
+# Job Queue
+rq==1.15.1
+rq-dashboard==0.6.1
+
+# Distributed Computing
+dask[complete]==2023.11.0
+
+# Machine Learning Experiment Tracking
+wandb==0.16.0
+mlflow==2.8.1
+
+# Natural Language Processing
+spacy==3.7.2
+nltk==3.8.1
+
+# Computer Vision (for deliverable validation)
+mediapipe==0.10.8
+
+# Blockchain Testing
+ganache-cli==6.12.2
+brownie-eth==1.20.0
+
+# Performance Testing
+locust==2.17.0
+
+# Memory Profiling
+memory-profiler==0.61.0
+pympler==0.9
+
+# Code Quality
+pre-commit==3.6.0
+bandit==1.7.5
+
+# Documentation
+mkdocs==1.5.3
+mkdocs-material==9.4.8
+
+# Container Health Checks
+healthcheck==1.3.3
+
+# Metrics Collection
+psutil==5.9.6
+gputil==1.4.0
+
+# Development Utilities
+ipython==8.17.2
+jupyter==1.0.0
+notebook==7.0.6
+
+# API Rate Limiting
+limits==3.6.0
+
+# Caching
+cachetools==5.3.2
+diskcache==5.6.3
+
+# Configuration Validation
+cerberus==1.3.5
+
+# Async Task Queue Alternative
+dramatiq[redis]==1.15.0
+
+# Network Security
+dnspython==2.4.2
+
+# File Upload Handling
+python-multipart==0.0.6
+aiofiles==23.2.1
+
+# Blockchain Event Monitoring
+web3[tester]==6.11.3
+
+# Advanced Crypto Operations
+coincurve==18.0.0
+ecdsa==0.18.0
+
+# Message Serialization
+msgpack==1.0.7
+protobuf==4.25.1
+
+# Distributed Locks
+redlock-py==1.0.8
+
+# Time Zone Handling
+babel==2.13.1
+
+# Advanced Logging
+structlog==23.2.0
+colorlog==6.8.0
+
+# HTTP Client with Retry Logic
+tenacity==8.2.3
+
+# Configuration from Multiple Sources
+omegaconf==2.3.0
+
+# Advanced CLI (for management commands)
+click==8.1.7
+typer==0.9.0
+
+# Resource Monitoring
+resource==0.2.1
+
+# Advanced JSON Handling
+orjson==3.9.10
+ujson==5.8.0
+
+# Async Context Managers
+async-timeout==4.0.3
+contextlib2==21.6.0
+
+# Advanced Error Handling
+sentry-sdk[fastapi]==1.38.0
+
+# API Versioning
+fastapi-versioning==0.10.0
+
+# Request ID Tracking
+uuid-utils==0.7.0
+
+# Advanced Middleware
+starlette-prometheus==0.9.0
+
+# File Type Detection
+python-magic==0.4.27
+filetype==1.2.0
+
+# Advanced Serialization
+marshmallow==3.20.1
+marshmallow-sqlalchemy==0.29.0
+
+# Distributed Configuration
+consul==1.1.0
+etcd3==0.12.0
+
+# Advanced Testing
+factory-boy==3.3.0
+faker==20.1.0
+responses==0.23.3
+
+# Performance Optimization
+cython==3.0.5
+numba==0.58.1
+
+# Advanced Async Support
+trio==0.23.1
+anyio==4.1.0
+
+# Workflow Engine
+prefect==2.14.11
+airflow==2.7.3
+
+# Feature Flags
+unleash-client==5.11.1
+
+# Advanced Metrics
+statsd==4.0.1
+prometheus-flask-exporter==0.23.0
+
+# Circuit Breaker Pattern
+circuitbreaker==1.4.0
+
+# Advanced Caching
+redis-py-cluster==2.1.3
+pymemcache==4.0.0
+
+# Event Sourcing
+eventsourcing==9.2.24
+
+# Advanced Security
+authlib==1.2.1
+oauthlib==3.2.2
+
+# Graph Processing (for complex agent networks)
+networkx==3.2.1
+pygraphviz==1.11
+
+# Advanced Data Validation
+schema==0.7.5
+voluptuous==0.14.1
+
+# Message Brokers
+pika==1.3.2  # RabbitMQ
+kafka-python==2.0.2  # Apache Kafka
+
+# Advanced HTTP Handling
+httpcore==1.0.2
+h11==0.14.0
+h2==4.1.0
+
+# Service Discovery
+python-consul==1.1.0
+kazoo==2.9.0  # Zookeeper client
+
+# Advanced Database Features
+sqlalchemy-utils==0.41.1
+alembic-utils==0.8.2
+
+# Image Optimization
+pillow-simd==10.0.1.post1
+
+# Advanced Audio Processing
+pyaudio==0.2.11
+wave==0.0.2
+
+# Video Processing
+ffmpeg-python==0.2.0
+moviepy==1.0.3
+
+# Document Processing
+python-docx==1.1.0
+pypdf==3.17.1
+python-pptx==0.6.22
+
+# Spreadsheet Processing
+openpyxl==3.1.2
+xlsxwriter==3.1.9
+
+# Advanced Cryptography
+pynacl==1.5.0
+bcrypt==4.1.1
+
+# Time Series Database
+influxdb==5.3.1
+timescaledb==0.0.4
+
+# Advanced Monitoring
+opencensus==0.11.4
+opentelemetry-api==1.21.0
+
+# Content Management
+boto3==1.34.0  # AWS SDK
+azure-storage-blob==12.19.0  # Azure Storage
+google-cloud-storage==2.10.0  # Google Cloud Storage
+
+# Advanced Search
+elasticsearch==8.11.0
+opensearch-py==2.4.0
+
+# Machine Learning Pipeline
+feast==0.35.0
+kubeflow-pipelines==2.0.5
+
+# Advanced Validation
+pydantic-extra-types==2.1.0
+email-validator==2.1.0.post1
+
+# Workflow Automation
+apache-airflow==2.7.3
+luigi==3.4.0
+
+# Advanced Configuration
+hydra-core==1.3.2
+configparser==6.0.0
+
+# Advanced Logging & Monitoring
+loguru==0.7.2
+elastic-apm==6.20.0
+
+# Load Testing
+artillery==1.7.4
+hey==0.1.4
+
+# Code Generation
+jinja2-cli==0.8.2
+cookiecutter==2.5.0
+
+# API Documentation
+redoc==0.0.1
+swagger-codegen==0.0.1
+
+# Advanced Networking
+netifaces==0.11.0
+netaddr==0.9.0
+
+# System Information
+distro==1.8.0
+platform==1.0.8
+
+# Advanced File Operations
+watchdog==3.0.0
+pathlib2==2.3.7
+
+# Package Management
+pip-tools==7.3.0
+pipenv==2023.11.15
+
+# Version Control Integration
+gitpython==3.1.40
+pygit2==1.13.3
+
+# Container Integration
+docker==6.1.3
+kubernetes==28.1.0
+
+# Service Mesh
+istio==1.19.0
+
+# Continuous Integration
+github3.py==4.0.1
+gitlab-python==3.15.0
+
+# Infrastructure as Code
+terraform-python==0.10.1
+ansible==8.7.0
+
+# Cloud Native
+helm==3.13.3
+kubectl==1.29.0
+
+# Observability
+jaeger-client==4.8.0
+zipkin==0.2.0
+
+# Feature Store
+tecton==0.7.4
+hopsworks==3.4.4
+
+# Model Registry
+mlflow==2.8.1
+neptune-client==1.8.5
+
+# Experiment Tracking
+comet-ml==3.35.3
+weights-biases==0.16.0
+
+# Hyperparameter Tuning
+optuna==3.4.0
+hyperopt==0.2.7
+
+# Model Serving
+bentoml==1.1.6
+seldon-core==1.17.1
+
+# Data Lineage
+great-expectations==0.18.3
+dvc==3.27.0
+
+# Stream Processing
+apache-beam==2.52.0
+flink==1.18.0
+
+# Graph Databases
+neo4j==5.14.1
+arangodb==7.8.0
+
+# Time Series Forecasting
+prophet==1.1.4
+statsmodels==0.14.0
+
+# Reinforcement Learning
+gym==0.29.1
+stable-baselines3==2.2.1
+
+# Distributed Training
+horovod==0.28.1
+ray==2.8.0
+
+# Model Optimization
+onnx==1.15.0
+tensorrt==8.6.1
+
+# Federated Learning
+flower==1.6.0
+pysyft==0.8.5
+
+# Privacy Preserving ML
+opacus==1.4.0
+diffprivlib==0.6.1
+
+# Quantum Computing (for advanced cryptography)
+qiskit==0.45.0
+cirq==1.2.0
+
+# Blockchain Oracles
+chainlink==0.1.0
+band-protocol==0.1.0
+
+# Layer 2 Solutions
+optimism==0.1.0
+arbitrum==0.1.0
+
+# Cross-chain Bridges
+wormhole==0.1.0
+rainbow-bridge==0.1.0
+
+# DeFi Protocols
+uniswap==0.1.0
+compound==0.1.0
+
+# NFT Standards
+erc721==0.1.0
+erc1155==0.1.0
+
+# Governance Tokens
+compound-governance==0.1.0
+aave-governance==0.1.0
+
+# Yield Farming
+yearn==0.1.0
+harvest==0.1.0
+
+# Synthetic Assets
+synthetix==0.1.0
+mirror==0.1.0
+
+# Prediction Markets
+augur==0.1.0
+polymarket==0.1.0
+
+# Insurance Protocols
+nexus-mutual==0.1.0
+unslashed==0.1.0
+
+# Identity Solutions
+ceramic==0.1
