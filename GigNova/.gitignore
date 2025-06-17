@@ -48,6 +48,10 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Specific files to exclude
+Gignova_mcp_guide.md
+enhanced_GigNova_PRD.md
+
 # Contract specific
 .secret
 artifacts/
