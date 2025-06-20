@@ -4,8 +4,9 @@ GigNova: Tests for API routes
 """
 
 import pytest
-from unittest.mock import patch, AsyncMock
 import json
+from datetime import datetime
+from unittest.mock import patch, AsyncMock
 
 from gignova.models.base import JobStatus
 
@@ -98,7 +99,7 @@ def test_get_job(mock_verify_token, test_client, sample_job_post):
             "job123": {
                 "post": sample_job_post,
                 "status": JobStatus.ACTIVE,
-                "created_at": "2023-01-01T00:00:00",
+                "created_at": datetime.now().isoformat(),
                 "freelancer_id": "freelancer123"
             }
         }
@@ -162,13 +163,15 @@ def test_register_freelancer(mock_verify_token, test_client, sample_freelancer_p
     # Ensure the mock_verify_token returns the same ID as the freelancer_id in the profile
     mock_verify_token.return_value = sample_freelancer_profile.freelancer_id
     
-    with patch("gignova.api.routes.orchestrator") as mock_orchestrator:
+    with patch("gignova.api.routes.orchestrator") as mock_orchestrator, \
+         patch("gignova.api.routes.mcp_manager.analytics_log_event") as mock_analytics:
+        # Mock the analytics_log_event to prevent errors
+        mock_analytics.return_value = None
         mock_orchestrator.freelancers = {}
         mock_orchestrator.matching_agent.vector_manager.store_freelancer_embedding = AsyncMock()
         
         # Create a modified JSON that includes user_id explicitly
         profile_data = sample_freelancer_profile.model_dump()
-        profile_data["user_id"] = sample_freelancer_profile.freelancer_id  # Add user_id explicitly
         
         response = test_client.post(
             "/api/v1/freelancers",
@@ -200,7 +203,7 @@ def test_list_jobs(mock_verify_token, test_client, sample_job_post):
             "job123": {
                 "post": sample_job_post,
                 "status": JobStatus.ACTIVE,
-                "created_at": "2023-01-01T00:00:00"
+                "created_at": datetime.now().isoformat()
             }
         }
         
