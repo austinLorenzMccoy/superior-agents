@@ -8,7 +8,7 @@ from unittest.mock import patch, AsyncMock, MagicMock
 from datetime import datetime
 
 from gignova.models.base import JobStatus, JobPost, JobMatch, QAResult
-from gignova.orchestrator import GigNovaOrchestrator
+from gignova.orchestrator import GigNovaOrchestrator, mcp_manager
 
 
 @pytest.fixture
@@ -47,25 +47,36 @@ def test_orchestrator_initialization(mock_payment, mock_qa, mock_negotiation, mo
 @pytest.mark.asyncio
 async def test_process_job_posting(sample_job_post):
     """Test job posting processing"""
+    # Mock MCP manager
+    mcp_manager.analytics_log_event = AsyncMock(return_value={"success": True})
+    
     orchestrator = GigNovaOrchestrator()
     
+    # Mock vector_manager.store_job_embedding to prevent "Numpy is not available" error
+    orchestrator.matching_agent.vector_manager.store_job_embedding = AsyncMock(return_value={"success": True})
+    
     # Mock agent methods
-    orchestrator.matching_agent.find_matches = MagicMock(return_value=[
-        JobMatch(
-            job_id="job123",
-            freelancer_id="freelancer123",
-            confidence_score=0.85,
-            match_reasons=["Skill match"]
-        )
+    orchestrator.matching_agent.find_matches = AsyncMock(return_value=[
+        {
+            "job_id": "job123",
+            "freelancer_id": "freelancer123",
+            "score": 0.85,
+            "reasons": ["Skill match"]
+        }
     ])
     
-    orchestrator.negotiation_agent.negotiate = MagicMock(return_value={
+    orchestrator.negotiation_agent.negotiate = AsyncMock(return_value={
         "agreed_rate": 1500.0,
         "rounds": 2,
         "success": True
     })
     
-    orchestrator.payment_agent.create_escrow = MagicMock(return_value="0xtx_hash_123")
+    orchestrator.payment_agent.create_escrow = AsyncMock(return_value={
+        "success": True,
+        "contract_address": "0xcontract_123",
+        "escrow_id": "escrow_123",
+        "transaction_hash": "0xtx_hash_123"
+    })
     
     # Add a test freelancer
     orchestrator.freelancers["freelancer123"] = {
@@ -78,7 +89,9 @@ async def test_process_job_posting(sample_job_post):
     assert result["status"] == "active"
     assert result["freelancer_id"] == "freelancer123"
     assert result["agreed_rate"] == 1500.0
-    assert result["contract_tx"] == "0xtx_hash_123"
+    assert result["contract_address"] == "0xcontract_123"
+    assert result["escrow_id"] == "escrow_123"
+    assert result["confidence_score"] == 0.85
     
     # Check job was stored
     job_id = result["job_id"]
@@ -89,6 +102,9 @@ async def test_process_job_posting(sample_job_post):
 @pytest.mark.asyncio
 async def test_submit_deliverable():
     """Test deliverable submission"""
+    # Mock MCP manager
+    mcp_manager.analytics_log_event = AsyncMock(return_value={"success": True})
+    
     orchestrator = GigNovaOrchestrator()
     
     # Setup test job
@@ -111,9 +127,9 @@ async def test_submit_deliverable():
     }
     
     # Mock agent methods
-    orchestrator.qa_agent.ipfs_manager.store_deliverable = MagicMock(return_value="ipfs_hash_123")
+    orchestrator.qa_agent.ipfs_manager.store_deliverable = AsyncMock(return_value="ipfs_hash_123")
     
-    orchestrator.qa_agent.validate_deliverable = MagicMock(return_value=QAResult(
+    orchestrator.qa_agent.validate_deliverable = AsyncMock(return_value=QAResult(
         job_id=job_id,
         deliverable_hash="ipfs_hash_123",
         similarity_score=0.92,
@@ -121,9 +137,9 @@ async def test_submit_deliverable():
         feedback="Excellent work"
     ))
     
-    orchestrator.payment_agent.release_payment = MagicMock(return_value={
+    orchestrator.payment_agent.release_payment = AsyncMock(return_value={
         "success": True,
-        "tx_hash": "0xtx_hash_456",
+        "transaction_hash": "0xtx_hash_456",
         "message": "Payment released successfully"
     })
     
@@ -133,7 +149,7 @@ async def test_submit_deliverable():
     assert result["job_id"] == job_id
     assert result["qa_passed"] is True
     assert result["similarity_score"] == 0.92
-    assert result["ipfs_hash"] == "ipfs_hash_123"
+    assert result["file_hash"] == "ipfs_hash_123"
     assert result["payment_released"] is True
     
     # Check job was updated
@@ -141,8 +157,13 @@ async def test_submit_deliverable():
     assert orchestrator.jobs[job_id]["deliverable_hash"] == "ipfs_hash_123"
 
 
-def test_get_performance_metrics():
+@pytest.mark.asyncio
+async def test_get_performance_metrics():
     """Test performance metrics calculation"""
+    # Mock MCP manager
+    mcp_manager.analytics_log_event = AsyncMock(return_value={"success": True})
+    mcp_manager.analytics_get_metrics = AsyncMock(return_value={"success": True, "data": {"mcp_metric": 0.95}})
+    
     orchestrator = GigNovaOrchestrator()
     
     # Setup test jobs
@@ -174,14 +195,18 @@ def test_get_performance_metrics():
             "status": JobStatus.COMPLETED,
             "created_at": datetime.now(),
             "freelancer_id": "freelancer2",
-            "qa_result": {
-                "similarity_score": 0.92
-            }
+            "qa_result": QAResult(
+                job_id="job3",
+                deliverable_hash="ipfs_hash_123",
+                similarity_score=0.92,
+                passed=True,
+                feedback="Good work"
+            )
         }
     }
     
     # Get metrics
-    metrics = orchestrator.get_performance_metrics()
+    metrics = await orchestrator.get_performance_metrics()
     
     assert metrics["total_jobs"] == 3
     assert metrics["match_rate"] == 2/3  # 2 out of 3 jobs matched

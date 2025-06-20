@@ -34,8 +34,9 @@ class Settings:
     JWT_ALGORITHM = "HS256"
     JWT_EXPIRATION_HOURS = 24
     
-    # OpenAI
+    # LLM API Keys
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
     
     # Blockchain
     WEB3_PROVIDER_URI = os.getenv("WEB3_PROVIDER_URI", "http://localhost:8545")
@@ -75,6 +76,7 @@ def validate_env_vars():
         required_vars.extend([
             "JWT_SECRET",
             "OPENAI_API_KEY",
+            "GROQ_API_KEY",
             "WEB3_PROVIDER_URI",
             "WALLET_PRIVATE_KEY",
             "QDRANT_URL",

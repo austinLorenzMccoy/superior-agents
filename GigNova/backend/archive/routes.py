@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GigNova: API Routes with MCP Integration
+GigNova: API Routes
 """
 
 import os
@@ -15,8 +15,7 @@ import jwt
 from passlib.context import CryptContext
 
 from gignova.models.base import JobPost, FreelancerProfile, JobStatus
-from gignova.orchestrator_mcp import GigNovaOrchestrator
-from gignova.mcp.client import mcp_manager
+from gignova.orchestrator import GigNovaOrchestrator
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -59,15 +58,8 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) 
 # Health check
 @router.get("/health")
 async def health_check():
-    """Health check endpoint with MCP status"""
-    # Check MCP connections
-    mcp_status = await orchestrator.initialize_mcp_connections()
-    
-    return {
-        "status": "healthy" if "error" not in mcp_status else "degraded",
-        "timestamp": datetime.now().isoformat(),
-        "mcp_status": mcp_status
-    }
+    """Health check endpoint"""
+    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
 
 # Authentication endpoints
@@ -83,16 +75,6 @@ async def register(username: str = Body(...), password: str = Body(...), role: s
         "password": pwd_context.hash(password),
         "role": role
     }
-    
-    # Log user registration in analytics
-    await mcp_manager.analytics_log_event(
-        event_type="user_registered",
-        event_data={
-            "user_id": user_id,
-            "role": role,
-            "timestamp": datetime.now().timestamp()
-        }
-    )
     
     return {
         "user_id": user_id,
@@ -113,16 +95,6 @@ async def login(username: str = Body(...), password: str = Body(...)):
         
     token = create_token(user["id"])
     
-    # Log login event in analytics
-    await mcp_manager.analytics_log_event(
-        event_type="user_login",
-        event_data={
-            "user_id": user["id"],
-            "role": user["role"],
-            "timestamp": datetime.now().timestamp()
-        }
-    )
-    
     return {
         "access_token": token,
         "token_type": "bearer",
@@ -134,7 +106,7 @@ async def login(username: str = Body(...), password: str = Body(...)):
 # Job endpoints
 @router.post("/jobs")
 async def create_job(job_post: JobPost, user_id: str = Depends(verify_token)):
-    """Create a new job with MCP integration"""
+    """Create a new job"""
     job_post.client_id = user_id
     result = await orchestrator.process_job_posting(job_post)
     return result
@@ -152,16 +124,6 @@ async def get_job(job_id: str, user_id: str = Depends(verify_token)):
     if job["post"].client_id != user_id and job.get("freelancer_id") != user_id:
         raise HTTPException(status_code=403, detail="Not authorized to view this job")
         
-    # Log job view event
-    await mcp_manager.analytics_log_event(
-        event_type="job_viewed",
-        event_data={
-            "job_id": job_id,
-            "viewer_id": user_id,
-            "timestamp": datetime.now().timestamp()
-        }
-    )
-        
     return {
         "job_id": job_id,
         "status": job["status"].value,
@@ -169,8 +131,6 @@ async def get_job(job_id: str, user_id: str = Depends(verify_token)):
         "freelancer_id": job.get("freelancer_id"),
         "created_at": job.get("created_at").isoformat(),
         "agreed_rate": job.get("agreed_rate"),
-        "contract_address": job.get("contract_address"),
-        "escrow_id": job.get("escrow_id"),
         "deliverable_hash": job.get("deliverable_hash"),
         "qa_result": job.get("qa_result")
     }
@@ -182,7 +142,7 @@ async def submit_deliverable(
     deliverable: UploadFile = File(...), 
     user_id: str = Depends(verify_token)
 ):
-    """Submit deliverable for a job with MCP integration"""
+    """Submit deliverable for a job"""
     if job_id not in orchestrator.jobs:
         raise HTTPException(status_code=404, detail="Job not found")
         
@@ -206,29 +166,18 @@ async def submit_deliverable(
 # Freelancer endpoints
 @router.post("/freelancers")
 async def register_freelancer(profile: FreelancerProfile, user_id: str = Depends(verify_token)):
-    """Register freelancer profile with MCP integration"""
+    """Register freelancer profile"""
     # Ensure user_id matches the one in the profile
     if profile.user_id != user_id:
         raise HTTPException(status_code=400, detail="User ID mismatch")
     
     # Store in orchestrator
-    orchestrator.freelancers[user_id] = profile.model_dump()
+    orchestrator.freelancers[user_id] = profile.dict()
     
-    # Store embedding via MCP vector server
-    profile_text = f"{profile.name} {profile.bio} {' '.join(profile.skills)}, hourly rate: {profile.hourly_rate}"
-    await orchestrator.matching_agent.vector_manager.store_freelancer_embedding(
-        user_id, profile_text, profile.model_dump()
-    )
-    
-    # Log freelancer registration in analytics
-    await mcp_manager.analytics_log_event(
-        event_type="freelancer_registered",
-        event_data={
-            "freelancer_id": user_id,
-            "skills": profile.skills,
-            "hourly_rate": profile.hourly_rate,
-            "timestamp": datetime.now().timestamp()
-        }
+    # Store embedding
+    profile_text = f"Freelancer with skills: {' '.join(profile.skills)}, hourly rate: {profile.hourly_rate}"
+    orchestrator.matching_agent.vector_manager.store_freelancer_embedding(
+        user_id, profile_text, profile.dict()
     )
     
     return {
@@ -242,16 +191,6 @@ async def get_freelancer(freelancer_id: str, user_id: str = Depends(verify_token
     """Get freelancer profile"""
     if freelancer_id not in orchestrator.freelancers:
         raise HTTPException(status_code=404, detail="Freelancer not found")
-        
-    # Log freelancer profile view in analytics
-    await mcp_manager.analytics_log_event(
-        event_type="freelancer_profile_viewed",
-        event_data={
-            "freelancer_id": freelancer_id,
-            "viewer_id": user_id,
-            "timestamp": datetime.now().timestamp()
-        }
-    )
         
     return orchestrator.freelancers[freelancer_id]
 
@@ -279,23 +218,11 @@ async def list_jobs(
                 "status": job["status"].value,
                 "created_at": job.get("created_at").isoformat(),
                 "client_id": job["post"].client_id,
-                "freelancer_id": job.get("freelancer_id"),
-                "contract_address": job.get("contract_address")
+                "freelancer_id": job.get("freelancer_id")
             })
             
         if len(results) >= limit:
             break
-    
-    # Log job listing view in analytics
-    await mcp_manager.analytics_log_event(
-        event_type="job_list_viewed",
-        event_data={
-            "user_id": user_id,
-            "filter_status": status,
-            "result_count": len(results),
-            "timestamp": datetime.now().timestamp()
-        }
-    )
             
     return results
 
@@ -303,7 +230,7 @@ async def list_jobs(
 # Dashboard endpoints
 @router.get("/dashboard")
 async def get_dashboard(user_id: str = Depends(verify_token)):
-    """Get user dashboard data with MCP analytics integration"""
+    """Get user dashboard data"""
     # Get user's role
     user_role = None
     for user in users.values():
@@ -314,8 +241,8 @@ async def get_dashboard(user_id: str = Depends(verify_token)):
     if not user_role:
         raise HTTPException(status_code=404, detail="User not found")
         
-    # Get relevant metrics with MCP analytics
-    metrics = await orchestrator.get_performance_metrics()
+    # Get relevant metrics
+    metrics = orchestrator.get_performance_metrics()
     
     # Get user's jobs
     user_jobs = []
@@ -326,20 +253,8 @@ async def get_dashboard(user_id: str = Depends(verify_token)):
                 "job_id": job_id,
                 "title": job["post"].title,
                 "status": job["status"].value,
-                "created_at": job.get("created_at").isoformat(),
-                "contract_address": job.get("contract_address")
+                "created_at": job.get("created_at").isoformat()
             })
-    
-    # Log dashboard view in analytics
-    await mcp_manager.analytics_log_event(
-        event_type="dashboard_viewed",
-        event_data={
-            "user_id": user_id,
-            "role": user_role,
-            "jobs_count": len(user_jobs),
-            "timestamp": datetime.now().timestamp()
-        }
-    )
             
     return {
         "user_id": user_id,
@@ -352,7 +267,7 @@ async def get_dashboard(user_id: str = Depends(verify_token)):
 # Admin endpoints
 @router.post("/admin/evolve")
 async def trigger_evolution(user_id: str = Depends(verify_token)):
-    """Trigger agent evolution with MCP integration"""
+    """Trigger agent evolution"""
     # Check if admin (in production, use proper role check)
     is_admin = False
     for user in users.values():
@@ -364,27 +279,12 @@ async def trigger_evolution(user_id: str = Depends(verify_token)):
         raise HTTPException(status_code=403, detail="Admin access required")
         
     # Trigger evolution
-    evolution_results = await orchestrator.evolve_agents()
-    metrics = await orchestrator.get_performance_metrics()
+    orchestrator.evolve_agents()
     
     return {
         "status": "evolution_complete",
-        "evolution_results": evolution_results,
-        "metrics": metrics
+        "metrics": orchestrator.get_performance_metrics()
     }
-
-
-# MCP specific endpoints
-@router.get("/mcp/status")
-async def get_mcp_status(user_id: str = Depends(verify_token)):
-    """Get MCP connection status"""
-    return await orchestrator.initialize_mcp_connections()
-
-
-@router.post("/mcp/refresh")
-async def refresh_mcp_connections(user_id: str = Depends(verify_token)):
-    """Refresh MCP connections"""
-    return await orchestrator.initialize_mcp_connections()
 
 
 # Testing endpoints
@@ -412,7 +312,7 @@ async def initialize_test_data():
         
     # Create test freelancer profile
     profile = FreelancerProfile(
-        user_id="freelancer-123",
+        freelancer_id="freelancer-123",
         name="Test Freelancer",
         bio="Experienced developer with 5 years of experience",
         skills=["python", "javascript", "react", "fastapi"],
@@ -422,18 +322,10 @@ async def initialize_test_data():
     
     orchestrator.freelancers["freelancer-123"] = profile.dict()
     
-    # Store embedding via MCP vector server
+    # Store embedding
     profile_text = f"{profile.name} {profile.bio} {' '.join(profile.skills)}"
-    await orchestrator.matching_agent.vector_manager.store_freelancer_embedding(
+    orchestrator.matching_agent.vector_manager.store_freelancer_embedding(
         "freelancer-123", profile_text, profile.dict()
-    )
-    
-    # Log test data initialization in analytics
-    await mcp_manager.analytics_log_event(
-        event_type="test_data_initialized",
-        event_data={
-            "timestamp": datetime.now().timestamp()
-        }
     )
     
     return {

@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Any
 from enum import Enum
 from dataclasses import dataclass
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class JobStatus(Enum):
@@ -43,18 +43,32 @@ class JobPost(BaseModel):
     skills: List[str]
     budget_min: float
     budget_max: float
-    deadline: datetime
+    deadline_days: int
     client_id: str
     requirements: List[str] = []
+    
+    @field_validator('budget_max')
+    def validate_budget(cls, v, info):
+        if 'budget_min' in info.data and v < info.data['budget_min']:
+            raise ValueError('budget_max must be greater than budget_min')
+        return v
 
 
 class FreelancerProfile(BaseModel):
-    user_id: str
+    freelancer_id: str
+    name: str
+    bio: str
     skills: List[str]
     hourly_rate: float
+    availability: str
     portfolio: List[str] = []
     rating: float = 0.0
     completed_jobs: int = 0
+    
+    @property
+    def user_id(self) -> str:
+        # For compatibility with API routes that expect user_id
+        return self.freelancer_id
 
 
 class JobMatch(BaseModel):

@@ -212,12 +212,12 @@ async def register_freelancer(profile: FreelancerProfile, user_id: str = Depends
         raise HTTPException(status_code=400, detail="User ID mismatch")
     
     # Store in orchestrator
-    orchestrator.freelancers[user_id] = profile.model_dump()
+    orchestrator.freelancers[user_id] = profile.dict()
     
     # Store embedding via MCP vector server
     profile_text = f"{profile.name} {profile.bio} {' '.join(profile.skills)}, hourly rate: {profile.hourly_rate}"
     await orchestrator.matching_agent.vector_manager.store_freelancer_embedding(
-        user_id, profile_text, profile.model_dump()
+        user_id, profile_text, profile.dict()
     )
     
     # Log freelancer registration in analytics

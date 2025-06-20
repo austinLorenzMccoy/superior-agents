@@ -114,8 +114,8 @@ async def check_mcp_health():
 
 # Create FastAPI app
 app = FastAPI(
-    title=Settings.API_TITLE,
-    description=f"{Settings.API_DESCRIPTION}\nIntegrated with MCP for production-grade services.",
+    title=f"{Settings.API_TITLE} with MCP",
+    description=f"{Settings.API_DESCRIPTION}\nEnhanced with MCP integration for production-grade services.",
     version=Settings.API_VERSION,
     debug=Settings.DEBUG,
     lifespan=lifespan

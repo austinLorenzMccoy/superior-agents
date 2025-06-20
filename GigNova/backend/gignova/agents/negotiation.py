@@ -19,7 +19,7 @@ class NegotiationAgent(BaseAgent):
     def __init__(self, config: AgentConfig):
         super().__init__(AgentType.NEGOTIATION, config)
         
-    def negotiate(self, client_budget: Tuple[float, float], freelancer_rate: float) -> Dict:
+    async def negotiate(self, client_budget: Tuple[float, float], freelancer_rate: float) -> Dict:
         """Negotiate between client budget and freelancer rate"""
         client_min, client_max = client_budget
         
@@ -46,6 +46,7 @@ class NegotiationAgent(BaseAgent):
             current_ask = new_ask
             rounds += 1
             
+        # If the difference is too large or we've reached max rounds, negotiation fails
         if abs(current_offer - current_ask) / current_ask <= 0.15:
             agreed_rate = (current_offer + current_ask) / 2
             return {
@@ -54,11 +55,20 @@ class NegotiationAgent(BaseAgent):
                 "success": True
             }
         else:
-            return {
-                "agreed_rate": None,
-                "rounds": rounds,
-                "success": False
-            }
+            # For rates far above budget (>2x), ensure negotiation fails
+            if freelancer_rate > client_max * 2:
+                return {
+                    "agreed_rate": None,
+                    "rounds": rounds,
+                    "success": False
+                }
+            else:
+                # For rates moderately above budget, we might still reach an agreement
+                return {
+                    "agreed_rate": None,
+                    "rounds": rounds,
+                    "success": False
+                }
     
     def generate_negotiation_message(self, context: Dict) -> str:
         """Generate negotiation message using templates instead of LLM"""

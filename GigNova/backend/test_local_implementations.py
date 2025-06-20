@@ -13,10 +13,14 @@ logging.basicConfig(level=logging.INFO,
                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Import our local implementations
-from gignova.database.vector_manager import VectorManager
-from gignova.ipfs.manager import IPFSManager
-from gignova.blockchain.manager import BlockchainManager
+# Set DEV_MODE to true for local implementations
+import os
+os.environ["DEV_MODE"] = "true"
+
+# Import our MCP-enhanced implementations (will use local in DEV_MODE)
+from gignova.database.vector_manager_mcp import VectorManager
+from gignova.ipfs.manager_mcp import IPFSManager
+from gignova.blockchain.manager_mcp import BlockchainManager
 from gignova.config.settings import Settings
 
 def test_vector_manager():

@@ -18,8 +18,24 @@ from gignova.orchestrator import GigNovaOrchestrator
 
 @pytest.fixture
 def test_client():
-    """Create a test client for FastAPI app"""
-    return TestClient(app)
+    """Create a test client for FastAPI app with authentication bypass"""
+    # Create a test user ID to use in tests
+    test_user_id = "test-user-id"
+    
+    # Override the verify_token dependency for testing
+    def mock_verify_token():
+        return test_user_id
+    
+    app.dependency_overrides = {}
+    # Override the security dependency
+    from gignova.api.routes import verify_token
+    app.dependency_overrides[verify_token] = mock_verify_token
+    
+    client = TestClient(app)
+    yield client
+    
+    # Clean up after tests
+    app.dependency_overrides = {}
 
 
 @pytest.fixture

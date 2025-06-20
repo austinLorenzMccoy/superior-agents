@@ -18,12 +18,12 @@ class MatchingAgent(BaseAgent):
     def __init__(self, config: AgentConfig):
         super().__init__(AgentType.MATCHING, config)
         
-    def find_matches(self, job_post: JobPost) -> List[JobMatch]:
+    async def find_matches(self, job_post: JobPost) -> List[JobMatch]:
         """Find matching freelancers for a job"""
         job_text = f"{job_post.title} {job_post.description} {' '.join(job_post.skills)}"
         
         # Get matches from vector DB
-        matches = self.vector_manager.find_matches(job_text, limit=10)
+        matches = await self.vector_manager.find_matches(job_text, limit=10)
         
         job_matches = []
         for match in matches:

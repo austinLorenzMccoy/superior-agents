@@ -48,8 +48,30 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Python specific
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Documentation and PRDs
+docs/PRD*.md
+docs/Guide*.md
+*.pdf
+*.docx
+*.pptx
+
 # Specific files to exclude
 Gignova_mcp_guide.md
+MCP_integration_guide.md
+Groq_integration_guide.md
 enhanced_GigNova_PRD.md
 
 # Contract specific

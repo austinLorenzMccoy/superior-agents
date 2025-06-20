@@ -3,8 +3,8 @@ from setuptools import setup, find_packages
 
 setup(
     name="gignova",
-    version="1.0.0",
-    description="GigNova: The Self-Evolving Talent Ecosystem",
+    version="1.1.0",
+    description="GigNova: The Self-Evolving Talent Ecosystem with MCP Integration",
     author="GigNova Team",
     author_email="info@gignova.io",
     packages=find_packages(where="backend"),
@@ -27,6 +27,8 @@ setup(
         "torch>=2.1.1",
         "transformers>=4.35.2",
         "numpy>=1.24.3",
+        "langchain-groq>=0.3.2",
+        "groq>=0.28.0",
         
         # Blockchain & Web3
         "web3>=6.11.3",
@@ -45,6 +47,11 @@ setup(
         
         # Background Tasks & Scheduling
         "schedule>=1.2.0",
+        
+        # MCP Integration
+        "aiohttp>=3.9.1",
+        "httpx>=0.25.2",
+        "asyncio>=3.4.3",
     ],
     extras_require={
         "dev": [
