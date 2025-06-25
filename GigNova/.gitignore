@@ -69,10 +69,13 @@ docs/Guide*.md
 *.pptx
 
 # Specific files to exclude
-#Gignova_mcp_guide.md
-#MCP_integration_guide.md
-#Groq_integration_guide.md
-#enhanced_GigNova_PRD.md
+Gignova_mcp_guide.md
+MCP_integration_guide.md
+Groq_integration_guide.md
+enhanced_GigNova_PRD.md
+CLOUD_DEPLOYMENT_GUIDE.md
+DEPLOYMENT.md
+Gignova_PRD.md
 
 # Contract specific
 .secret
