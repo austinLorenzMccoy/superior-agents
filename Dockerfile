@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 WORKDIR /app
 
@@ -6,17 +6,26 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the backend code
 COPY GigNova/backend /app/backend
 
-# Install Python dependencies
+# Create a modified requirements file without problematic dependencies
 WORKDIR /app/backend
-RUN pip install --no-cache-dir -r requirements.txt
+RUN grep -v "py-solc-x==1.12.0" requirements.txt > requirements_modified.txt && \
+    echo "py-solc-x==1.0.1" >> requirements_modified.txt
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements_modified.txt
 
 # Create directory for local storage
 RUN mkdir -p /root/.gignova
+
+# Set environment variables
+ENV PORT=8000
 
 # Expose the port
 EXPOSE 8000
