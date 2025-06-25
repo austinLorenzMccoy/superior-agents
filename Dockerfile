@@ -14,8 +14,9 @@ COPY GigNova/backend /app/backend
 
 # Create a modified requirements file without problematic dependencies
 WORKDIR /app/backend
-RUN grep -v "py-solc-x==1.12.0" requirements.txt > requirements_modified.txt && \
-    echo "py-solc-x==1.0.1" >> requirements_modified.txt
+RUN grep -v -E "py-solc-x==1.12.0|autogen-agentchat==0.2.0" requirements.txt > requirements_modified.txt && \
+    echo "py-solc-x==1.0.1" >> requirements_modified.txt && \
+    echo "autogen-agentchat==0.4.2" >> requirements_modified.txt
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
