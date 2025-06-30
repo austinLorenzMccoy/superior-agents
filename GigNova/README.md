@@ -1,15 +1,14 @@
-# GigNova: The Self-Evolving Talent Ecosystem with MCP Integration
+# GigNova: The Self-Evolving Talent Ecosystem
 
 ![GigNova Logo](https://via.placeholder.com/200x80?text=GigNova)
 
 [![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-green)](https://fastapi.tiangolo.com/)
-[![MCP](https://img.shields.io/badge/MCP-Integrated-purple)](https://github.com/yourusername/gignova)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🚀 Overview
 
-GigNova is a revolutionary blockchain-powered talent marketplace with autonomous AI agents that facilitate the entire freelance workflow. Our platform connects clients with skilled freelancers while leveraging cutting-edge AI to handle matching, negotiation, quality assurance, and payments. Now enhanced with MCP (Model Context Protocol) integration for production-grade scalability and interoperability.
+GigNova is a revolutionary blockchain-powered talent marketplace with autonomous AI agents that facilitate the entire freelance workflow. Our platform connects clients with skilled freelancers while leveraging cutting-edge AI to handle matching, negotiation, quality assurance, and payments. Built with a modular architecture for scalability and maintainability.
 
 ### ✨ Key Features
 
@@ -19,28 +18,29 @@ GigNova is a revolutionary blockchain-powered talent marketplace with autonomous
 - **Automated Quality Assurance**: AI-driven validation of deliverables against job requirements
 - **Self-Evolving System**: Agents learn and improve from past interactions to optimize outcomes
 - **Vector Storage**: Semantic search for finding the perfect talent match
-- **MCP Integration**: Standardized protocol for AI service interoperability across vector storage, blockchain, file storage, analytics, and social media
+- **Modular Architecture**: Clean separation of concerns with independent, interchangeable components
 
 ## 🛠️ Technology Stack
 
 - **Backend**: FastAPI, Python 3.11+, Asyncio
-- **AI/ML**: OpenAI, Groq, Sentence Transformers, PyTorch
-- **Vector Storage**: MCP Vector Server (production) / In-memory implementation (development)
-- **File Storage**: MCP Storage Server (production) / Local filesystem (development)
-- **Blockchain**: MCP Blockchain Server (production) / Local JSON-based implementation (development)
-- **Analytics**: MCP Analytics Server for event logging and metrics
+- **AI/ML**: LangChain, Sentence Transformers, PyTorch
+- **Vector Storage**: ChromaDB for embedding storage and retrieval
+- **File Storage**: IPFS for decentralized file storage
+- **Blockchain**: Ethereum for smart contracts and payments
+- **Analytics**: Local event logging and metrics tracking
 - **Authentication**: JWT
-- **MCP Protocol**: Standardized API for AI service interoperability
 
 ## 📋 Prerequisites
 
 - Python 3.11+
-- OpenAI API key or Groq API key
-- MCP Servers (for production mode)
+- Sentence Transformers (all-MiniLM-L6-v2 model)
+- Local ChromaDB instance (automatically created)
+- Ethereum node (for blockchain functionality)
+- IPFS node (for decentralized storage)
 
 The application can run in two modes:
-1. **Development Mode**: Uses simplified local implementations for vector storage, file storage, and blockchain functionality
-2. **Production Mode**: Uses MCP servers for all external services including vector storage, blockchain, file storage, analytics, and social media integration
+1. **Development Mode**: Uses local implementations with graceful degradation when services are unavailable
+2. **Production Mode**: Requires all external services to be properly configured
 
 ## 🧪 Testing Status
 
@@ -51,6 +51,10 @@ The application can run in two modes:
 
 ### Recent Improvements
 
+- Implemented hybrid job recommendations system with fallback to mock data when backend returns errors
+- Fixed backend server port configuration to use port 8889 consistently
+- Enhanced recommendation agent with improved feedback handling
+- Added mock API functions for job recommendations and feedback
 - Fixed async handling in agent and API tests
 - Updated negotiation agent logic to correctly handle cases where freelancer rates are far above client budget
 - Added user_id property to FreelancerProfile model for API compatibility
@@ -98,73 +102,82 @@ pip install -e ".[dev]"
 
 ### Environment Variables
 
-Create a `.env` file in the project root with the following variables:
+Create a `.env` file in the backend directory with the following variables:
 
 ```
 # API Configuration
-JWT_SECRET=your_jwt_secret_key
+JWT_SECRET=your_jwt_secret_key_here
+OPENAI_API_KEY=your_openai_api_key_here
 
-# OpenAI API
-OPENAI_API_KEY=your_openai_api_key
+# Development Mode (enables local implementations)
+DEV_MODE=true
+ENVIRONMENT=dev
 
-# Development Mode (set to False for production with MCP)
-DEV_MODE=True
+# Blockchain Configuration
+ETHEREUM_PROVIDER_URL=http://localhost:8545
+ETHEREUM_CHAIN_ID=1337
+ETHEREUM_PRIVATE_KEY=your_private_key_here
+ESCROW_CONTRACT_ADDRESS=your_contract_address_here
 
-# MCP Server URLs (required for production mode)
-VECTOR_MCP_SERVER=http://vector-mcp-server:8080
-BLOCKCHAIN_MCP_SERVER=http://blockchain-mcp-server:8081
-STORAGE_MCP_SERVER=http://storage-mcp-server:8082
-ANALYTICS_MCP_SERVER=http://analytics-mcp-server:8083
-SOCIAL_MCP_SERVER=http://social-mcp-server:8084
-
-# MCP Authentication (if required)
-MCP_API_KEY=your_mcp_api_key
-MCP_JWT_SECRET=your_mcp_jwt_secret
-
-# Legacy Configuration (for development mode)
-WEB3_PROVIDER_URI=https://mainnet.infura.io/v3/your_infura_key
-WALLET_PRIVATE_KEY=your_wallet_private_key
-QDRANT_URL=http://localhost:6333
-QDRANT_API_KEY=your_qdrant_api_key
+# Storage Configuration
 IPFS_API_URL=/ip4/127.0.0.1/tcp/5001
+
+# Agent Configuration
+MATCHING_THRESHOLD=0.75
+NEGOTIATION_MAX_ROUNDS=3
+QA_THRESHOLD=0.8
 ```
+
+> Note: For development purposes, the vector database (ChromaDB) is automatically created locally and doesn't require additional configuration.
 
 ## 🚀 Running the Application
 
-### Development Server (Local Implementations)
+### Starting Required Services
+
+For full functionality, start the following services before running the application:
 
 ```bash
-uvicorn gignova.app:app --reload
+# Start a local Ethereum node (using Ganache or Hardhat)
+ganache-cli
+
+# Start a local IPFS node
+ipfs daemon
 ```
 
-### Production Server (MCP Integration)
+### Development Server
 
 ```bash
-# First ensure all MCP server URLs are set in .env
-export DEV_MODE=False
-uvicorn gignova.app_mcp:app --host 0.0.0.0 --port 8888
+cd backend
+uvicorn gignova.app:app --reload
 ```
 
 ### Production Deployment with Gunicorn
 
 ```bash
-export DEV_MODE=False
-gunicorn -k uvicorn.workers.UvicornWorker -w 4 gignova.app_mcp:app
+cd backend
+gunicorn gignova.app:app -k uvicorn.workers.UvicornWorker -w 4 --bind 0.0.0.0:8000
 ```
 
-## 🧪 Testing
-
-Run the test suite with pytest:
+## 🧪 Running Tests
 
 ```bash
-pytest
+cd backend
+
+# Run all tests
+python -m pytest -xvs tests/
+
+# Run core services tests
+python -c "import test_core_services; import asyncio; asyncio.run(test_core_services.main())"
 ```
 
-Run tests with coverage report:
+### Current Test Status
 
-```bash
-pytest --cov=gignova
-```
+- **Vector Database**: ✅ PASSED
+- **Blockchain**: ❌ FAILED (requires local Ethereum node)
+- **Storage**: ❌ FAILED (requires local IPFS node)
+- **Analytics**: ✅ PASSED
+- **Orchestrator**: ✅ PASSED
+- **Agents**: ✅ PASSED
 
 ## 📚 API Documentation
 
@@ -176,37 +189,33 @@ Once the server is running, access the API documentation at:
 ## 🏗️ Project Structure
 
 ```
-gignova/
+GigNova/
 ├── backend/
 │   ├── gignova/
 │   │   ├── agents/          # AI agent implementations
-│   │   │   ├── base.py      # Base agent with MCP integration
-│   │   │   ├── qa.py        # QA agent with MCP integration
-│   │   │   └── payment.py   # Payment agent with MCP integration
+│   │   │   ├── base.py      # Base agent class
+│   │   │   ├── matching.py  # Matching agent
+│   │   │   ├── negotiation.py # Negotiation agent
+│   │   │   ├── payment.py   # Payment agent
+│   │   │   └── qa.py        # Quality assurance agent
 │   │   ├── api/             # FastAPI routes and endpoints
 │   │   ├── blockchain/      # Blockchain interfaces
-│   │   │   └── manager_mcp.py # MCP blockchain manager
-│   │   ├── config/          # Configuration management
+│   │   │   └── manager.py   # Ethereum blockchain manager
 │   │   ├── database/        # Vector DB and data storage
-│   │   │   └── vector_manager_mcp.py # MCP vector manager
-│   │   ├── ipfs/            # Storage management
-│   │   │   └── manager_mcp.py # MCP storage manager
-│   │   ├── mcp/             # MCP integration
-│   │   │   ├── __init__.py  # MCP module initialization
-│   │   │   └── client.py    # MCP client manager
+│   │   │   └── vector_manager.py # ChromaDB vector manager
 │   │   ├── models/          # Data models and schemas
+│   │   ├── storage/         # Storage management
+│   │   │   └── manager.py   # IPFS storage manager
 │   │   ├── utils/           # Utility functions and helpers
-│   │   ├── app.py           # Development mode application
-│   │   ├── app_mcp.py       # Production mode application with MCP
-│   │   ├── orchestrator.py  # Development orchestrator
-│   │   └── orchestrator_mcp.py # Production orchestrator with MCP
-│   └── tests/               # Test suite
-│       └── test_mcp_integration.py # MCP integration tests
+│   │   │   └── analytics.py # Analytics logger
+│   │   ├── app.py           # FastAPI application
+│   │   └── orchestrator.py  # Main orchestrator
+│   ├── tests/               # Test suite
+│   ├── test_core_services.py # Core services tests
+│   └── setup.py             # Package setup
 ├── contracts/               # Solidity smart contracts
 ├── docs/                    # Documentation
-├── scripts/                 # Utility scripts
-├── setup.py                 # Package setup
-├── pyproject.toml           # Project configuration
+├── tests/                   # Additional tests
 └── README.md                # This file
 ```
 
@@ -226,14 +235,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🙏 Acknowledgements
 
-- OpenAI for their powerful language models
-- The FastAPI team for their excellent framework
+- The LangChain team for their excellent framework
+- The FastAPI team for their web framework
 - The Ethereum community for blockchain infrastructure
-- Qdrant team for vector search capabilities
+- ChromaDB team for vector storage capabilities
 - IPFS for decentralized storage solutions
+- Sentence Transformers for embedding models
 
 ---
-
-<p align="center">
-  Built with ❤️ by the GigNova Team
-</p>
