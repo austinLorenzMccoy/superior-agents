@@ -1,8 +1,8 @@
 /* Global styles */
 :root {
-  --primary-color: #6c3ce9; /* Rich purple */
-  --primary-dark: #4b2a9e; /* Deeper purple */
-  --secondary-color: #2de2e6; /* Bright cyan */
+  --primary-color: #3a86ff; /* Vibrant blue */
+  --primary-dark: #2667cc; /* Deeper blue */
+  --secondary-color: #00c6ab; /* Teal */
   --accent-color: #ff6b6b; /* Coral pink */
   --accent-secondary: #ffd166; /* Golden yellow */
   --text-color: #2d334a; /* Dark slate blue */
@@ -12,8 +12,8 @@
   --success-color: #06d6a0; /* Bright mint */
   --warning-color: #ffbe0b; /* Amber */
   --danger-color: #ef476f; /* Raspberry */
-  --gradient-start: #6c3ce9; /* Same as primary */
-  --gradient-end: #2de2e6; /* Same as secondary */
+  --gradient-start: #3a86ff; /* Same as primary */
+  --gradient-end: #00c6ab; /* Same as secondary */
   --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   --border-radius: 8px;
 }

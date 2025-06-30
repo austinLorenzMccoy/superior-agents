@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react'
-import './App.css'
-import LoginModal from './components/auth/LoginModal'
-import { fetchJobs, Job } from './utils/api'
-import QualityAssurance from './components/qa/QualityAssurance'
-import PaymentSystem from './components/payment/PaymentSystem'
-import { getStoredAuthData, storeAuthData, clearAuthData } from './utils/auth'
-import LoadingSpinner from './components/common/LoadingSpinner'
+import React, { useState, useEffect } from 'react';
+import './App.css';
+import LoginModal from './components/auth/LoginModal';
+import { fetchJobs } from './utils/apiConfig';
+import { Job } from './utils/api';
+import QualityAssurance from './components/qa/QualityAssurance';
+import PaymentSystem from './components/payment/PaymentSystem';
+import { getStoredAuthData, storeAuthData, clearAuthData } from './utils/auth';
+import LoadingSpinner from './components/common/LoadingSpinner';
+import LandingPage from './components/common/LandingPage';
+import JobRecommendations from './components/jobs/JobRecommendations';
+import Footer from './components/common/Footer';
 
 // Define types for our application
 interface User {
@@ -28,21 +32,10 @@ interface JobPost {
   freelancer_id?: string;
 }
 
-// This type is used for freelancer profiles and will be used in future features
-// @ts-ignore - Will be used in future features
-interface FreelancerProfile {
-  user_id: string;
-  name: string;
-  skills: string[];
-  experience_years: number;
-  hourly_rate: number;
-  bio: string;
-}
-
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [jobs, setJobs] = useState<JobPost[]>([]);
-  const [activeTab, setActiveTab] = useState<'jobs' | 'profile' | 'qa' | 'payment'>('jobs');
+  const [activeTab, setActiveTab] = useState<'jobs' | 'profile' | 'qa' | 'payment' | 'recommendations'>('jobs');
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedJobForQA, setSelectedJobForQA] = useState<string>('');
@@ -91,8 +84,8 @@ function App() {
   // Fetch jobs using our API utility with fallback to mock data
   const loadJobs = async (token: string) => {
     try {
-      // Try to fetch real data first
-      const { data, error } = await fetchJobs(API_BASE_URL, token);
+      // Use our configured API utility
+      const { data, error } = await fetchJobs(token);
       
       if (error) {
         console.warn('Failed to fetch real jobs, using mock data:', error);
@@ -211,47 +204,49 @@ function App() {
 
   return (
     <div className="app-container">
-      <header className="app-header">
-        <div className="logo-container">
-          <img src="/gignova-logo.svg" alt="GigNova Logo" className="app-logo" />
-          <h1>GigNova</h1>
-        </div>
-        <div className="header-actions">
-          {user ? (
-            <>
+      {user ? (
+        <>
+          <header className="app-header">
+            <div className="logo-container">
+              <img src="/gignova-logo.svg" alt="GigNova Logo" className="app-logo" />
+              <h1>GigNova</h1>
+            </div>
+            <div className="header-actions">
               <span className="user-welcome">Welcome, {user.username} ({user.role})</span>
               <button className="logout-btn" onClick={handleLogout}>Logout</button>
-            </>
-          ) : (
-            <button className="login-btn" onClick={() => setIsLoginModalOpen(true)}>Login / Register</button>
-          )}
-        </div>
-      </header>
+            </div>
+          </header>
 
-      <main className="app-main">
-        {user ? (
-          <>
+          <main className="app-main">
             <div className="dashboard-tabs">
               <button 
-                className={`tab ${activeTab === 'jobs' ? 'active' : ''}`}
+                className={`tab-button ${activeTab === 'jobs' ? 'active' : ''}`}
                 onClick={() => setActiveTab('jobs')}
               >
                 Jobs
               </button>
+              {user?.role === 'freelancer' && (
+                <button 
+                  className={`tab-button ${activeTab === 'recommendations' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('recommendations')}
+                >
+                  Recommendations
+                </button>
+              )}
               <button 
-                className={`tab ${activeTab === 'profile' ? 'active' : ''}`}
+                className={`tab-button ${activeTab === 'profile' ? 'active' : ''}`}
                 onClick={() => setActiveTab('profile')}
               >
                 Profile
               </button>
               <button 
-                className={`tab ${activeTab === 'qa' ? 'active' : ''}`}
+                className={`tab-button ${activeTab === 'qa' ? 'active' : ''}`}
                 onClick={() => setActiveTab('qa')}
               >
                 Quality Assurance
               </button>
               <button 
-                className={`tab ${activeTab === 'payment' ? 'active' : ''}`}
+                className={`tab-button ${activeTab === 'payment' ? 'active' : ''}`}
                 onClick={() => setActiveTab('payment')}
               >
                 Payments
@@ -283,6 +278,16 @@ function App() {
                   ) : (
                     <p>No jobs available at the moment.</p>
                   )}
+                </div>
+              )}
+              
+              {activeTab === 'recommendations' && user?.role === 'freelancer' && (
+                <div className="recommendations-section">
+                  <JobRecommendations 
+                    userId={user.id}
+                    token={user.token || ''}
+                    apiBaseUrl={API_BASE_URL}
+                  />
                 </div>
               )}
               
@@ -404,6 +409,17 @@ function App() {
                       </div>
                       
                       <div className="payment-option-card">
+                        <h4>View Contracts</h4>
+                        <p>Manage your active contracts and payment terms</p>
+                        <button 
+                          className="payment-action-btn secondary"
+                          onClick={() => console.log('View contracts')}
+                        >
+                          View Contracts
+                        </button>
+                      </div>
+                      
+                      <div className="payment-option-card">
                         <h4>Payment History</h4>
                         <p>View your transaction history and payment status</p>
                         <button 
@@ -431,47 +447,23 @@ function App() {
                 </div>
               )}
             </div>
-          </>
-        ) : (
-          <div className="welcome-container">
-            <div className="logo-container">
-              <img src="/gignova-logo.svg" alt="GigNova Logo" className="app-logo" />
-              <h1>GigNova</h1>
-            </div>
-            <p>The Self-Evolving Talent Ecosystem powered by AI</p>
-            <div className="feature-cards">
-              <div className="feature-card">
-                <h3>AI-Powered Matching</h3>
-                <p>Intelligent matching of freelancers to jobs based on skills and experience</p>
-              </div>
-              <div className="feature-card">
-                <h3>Smart Contracts</h3>
-                <p>Secure blockchain-based escrow and payment system</p>
-              </div>
-              <div className="feature-card">
-                <h3>Quality Assurance</h3>
-                <p>AI-driven validation of deliverables against requirements</p>
-              </div>
-            </div>
-            <button className="get-started-btn" onClick={() => setIsLoginModalOpen(true)}>Get Started</button>
-          </div>
-        )}
-      </main>
+          </main>
+        </>
+      ) : (
+        <LandingPage onLoginClick={() => setIsLoginModalOpen(true)} />
+      )}
 
       {isLoginModalOpen && (
-        <LoginModal
+        <LoginModal 
           isOpen={isLoginModalOpen}
           onClose={() => setIsLoginModalOpen(false)}
           onLogin={handleAuthSuccess}
           apiBaseUrl={API_BASE_URL}
         />
       )}
-
-      <footer className="app-footer">
-        <p> {new Date().getFullYear()} GigNova - The Self-Evolving Talent Ecosystem</p>
-      </footer>
+      <Footer />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

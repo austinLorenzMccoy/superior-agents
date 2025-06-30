@@ -6,6 +6,10 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-green)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+## 🔗 Live Demo
+
+**[Try GigNova Live](https://gignova-hybrid.netlify.app)** - Experience the platform with our hybrid API implementation
+
 ## 🚀 Overview
 
 GigNova is a revolutionary blockchain-powered talent marketplace with autonomous AI agents that facilitate the entire freelance workflow. Our platform connects clients with skilled freelancers while leveraging cutting-edge AI to handle matching, negotiation, quality assurance, and payments. Built with a modular architecture for scalability and maintainability.
