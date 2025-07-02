@@ -10,8 +10,13 @@ import random
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
 
-from autotradex.training.memory import QdrantMemory
-from autotradex.utils.config import get_config_value
+from backend.training.memory import QdrantMemory
+import sys
+import os
+
+# Add the parent directory to sys.path to enable imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
 
 logger = logging.getLogger(__name__)
 

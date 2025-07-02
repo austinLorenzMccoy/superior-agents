@@ -11,8 +11,13 @@ import logging
 import asyncio
 from pathlib import Path
 
-from autotradex.utils.config import load_config
-from autotradex.utils.logging import setup_logging
+from backend.utils.config import load_config
+import sys
+import os
+
+# Add the parent directory to sys.path to enable imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
 
 logger = logging.getLogger(__name__)
 
@@ -59,14 +64,14 @@ def parse_args():
 
 async def run_system(args):
     """Run the AutoTradeX system"""
-    from autotradex.api.app import start_app
+    from backend.api.app import start_app
     
     logger.info(f"Starting AutoTradeX on {args.host}:{args.port}")
     await start_app(host=args.host, port=args.port, debug=args.debug)
 
 def run_backtest(args):
     """Run backtesting"""
-    from autotradex.training.backtest import run_backtest
+    from backend.training.backtest import run_backtest
     
     logger.info(f"Running backtest for {args.symbol} over {args.days} days")
     results = run_backtest(symbol=args.symbol, days=args.days)
@@ -74,7 +79,7 @@ def run_backtest(args):
 
 def run_evolution(args):
     """Run evolution cycle"""
-    from autotradex.training.evolver import AgentEvolver
+    from backend.training.evolver import AgentEvolver
     
     logger.info(f"Running evolution cycle for regime: {args.regime}")
     evolver = AgentEvolver()

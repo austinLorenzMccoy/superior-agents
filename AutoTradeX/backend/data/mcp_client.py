@@ -10,7 +10,12 @@ import requests
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 
-from autotradex.utils.config import get_config_value
+import sys
+import os
+
+# Add the parent directory to sys.path to enable imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
 
 logger = logging.getLogger(__name__)
 
