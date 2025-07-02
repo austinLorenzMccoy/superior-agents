@@ -64,8 +64,8 @@ graph TD
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/autotradex.git
-cd autotradex
+git clone https://github.com/austinLorenzMccoy/superior-agents.git
+cd superior-agents/AutoTradeX
 
 # Set up virtual environment
 python -m venv venv
@@ -86,7 +86,7 @@ cp .env.example .env
 python setup.py
 
 # Start the AutoTradeX system
-python -m autotradex
+python -m backend.api.app
 
 # Access the web dashboard
 open http://localhost:8000
