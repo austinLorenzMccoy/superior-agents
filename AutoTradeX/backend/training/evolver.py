@@ -17,6 +17,7 @@ import os
 # Add the parent directory to sys.path to enable imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
+from backend.utils.config import get_config_value
 
 logger = logging.getLogger(__name__)
 
