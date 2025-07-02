@@ -1,0 +1,27 @@
+{
+  "coingecko": {
+    "base_url": "https://api.coingecko.com",
+    "api_key": "",
+    "environment": ""
+  },
+  "groq": {
+    "api_key": "",
+    "model": "llama3-70b-8192"
+  },
+  "qdrant": {
+    "url": "",
+    "api_key": "",
+    "collection_name": "autotradex_memories"
+  },
+  "trading": {
+    "max_position_size": 0.1,
+    "risk_factor": 0.03,
+    "default_symbol": "bitcoin"
+  },
+  "logging": {
+    "level": "INFO",
+    "file_path": "logs/autotradex.log",
+    "max_size_mb": 10,
+    "backup_count": 5
+  }
+}

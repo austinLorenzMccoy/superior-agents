@@ -1,0 +1,39 @@
+# AutoTradeX Requirements
+# Core AI and ML
+groq>=0.4.1
+numpy>=1.24.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+
+# Vector Database
+qdrant-client>=1.7.0
+
+# Web Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+websockets>=12.0
+
+# HTTP Requests
+requests>=2.31.0
+httpx>=0.25.0
+
+# Environment Management
+python-dotenv>=1.0.0
+
+# Data Processing
+python-json-logger>=2.0.0
+
+# Development Tools
+pytest>=7.4.0
+black>=23.0.0
+flake8>=6.1.0
+
+# Optional: For extended functionality
+# langgraph>=0.1.0  # Uncomment when available
+# stable-baselines3>=2.0.0  # For RL training
+# ta-lib>=0.4.0  # Technical analysis (requires manual installation)
+# backtrader>=1.9.76  # Backtesting framework
+
+# Production deployment
+gunicorn>=21.2.0
+redis>=5.0.0  # For caching and session management
