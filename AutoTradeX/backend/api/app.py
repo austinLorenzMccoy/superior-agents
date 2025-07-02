@@ -16,11 +16,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 
-from autotradex.data.mcp_integration import CoinGeckoMCP
-from autotradex.agents.mcp_strategy import MCPStrategyAgent, MarketContext
-from autotradex.training.memory import QdrantMemory
-from autotradex.training.evolver import AgentEvolver
-from autotradex.utils.config import get_config_value
+import sys
+import os
+
+# Add the parent directory to sys.path to enable imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
+from backend.data.mcp_integration import CoinGeckoMCP
+from backend.agents.mcp_strategy import MCPStrategyAgent, MarketContext
+from backend.training.memory import QdrantMemory
+from backend.training.evolver import AgentEvolver
+from backend.utils.config import get_config_value
 
 logger = logging.getLogger(__name__)
 
