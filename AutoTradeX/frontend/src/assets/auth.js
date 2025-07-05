@@ -1,4 +1,361 @@
 /**
+ * AutoTradeX Authentication System
+ * Provides both mock authentication and real backend integration
+ */
+
+// Configuration
+const AUTH_CONFIG = {
+    // API endpoints
+    apiBaseUrl: 'https://autotradex.onrender.com/api',
+    loginEndpoint: '/auth/login',
+    signupEndpoint: '/auth/signup',
+    verifyTokenEndpoint: '/auth/verify',
+    
+    // Local storage keys
+    tokenKey: 'autotradex_token',
+    userKey: 'autotradex_user',
+    
+    // Mock users for offline/demo mode
+    mockUsers: [
+        { email: 'demo@example.com', password: 'password123', name: 'Demo User' },
+        { email: 'test@example.com', password: 'password123', name: 'Test User' }
+    ],
+    
+    // Settings
+    useMockAuth: true, // Set to false to use only real backend
+    tokenExpiry: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
+};
+
+/**
+ * Authentication API - handles both mock and real authentication
+ */
+const AuthAPI = {
+    /**
+     * Attempt to login a user
+     * @param {string} email - User email
+     * @param {string} password - User password
+     * @returns {Promise} - Resolves with user data or rejects with error
+     */
+    login: async function(email, password) {
+        // Try real backend first if available
+        if (!AUTH_CONFIG.useMockAuth) {
+            try {
+                const response = await fetch(`${AUTH_CONFIG.apiBaseUrl}${AUTH_CONFIG.loginEndpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Login failed');
+                }
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.warn('Real backend login failed, falling back to mock:', error);
+                // Fall back to mock auth if real backend fails
+                if (!AUTH_CONFIG.useMockAuth) throw error;
+            }
+        }
+        
+        // Mock authentication
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                const user = AUTH_CONFIG.mockUsers.find(u => 
+                    u.email === email && u.password === password);
+                
+                if (user) {
+                    // Create mock token
+                    const token = btoa(`${user.email}:${Date.now()}`);
+                    resolve({
+                        token,
+                        user: {
+                            email: user.email,
+                            name: user.name
+                        }
+                    });
+                } else {
+                    reject(new Error('Invalid email or password'));
+                }
+            }, 500); // Simulate network delay
+        });
+    },
+    
+    /**
+     * Register a new user
+     * @param {Object} userData - User registration data
+     * @returns {Promise} - Resolves with user data or rejects with error
+     */
+    signup: async function(userData) {
+        // Try real backend first if available
+        if (!AUTH_CONFIG.useMockAuth) {
+            try {
+                const response = await fetch(`${AUTH_CONFIG.apiBaseUrl}${AUTH_CONFIG.signupEndpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Registration failed');
+                }
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.warn('Real backend signup failed, falling back to mock:', error);
+                // Fall back to mock auth if real backend fails
+                if (!AUTH_CONFIG.useMockAuth) throw error;
+            }
+        }
+        
+        // Mock registration
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                // Check if user already exists
+                const existingUser = AUTH_CONFIG.mockUsers.find(u => u.email === userData.email);
+                if (existingUser) {
+                    reject(new Error('User with this email already exists'));
+                    return;
+                }
+                
+                // Create new mock user
+                const newUser = {
+                    email: userData.email,
+                    password: userData.password,
+                    name: userData.name || userData.email.split('@')[0]
+                };
+                
+                // Add to mock users (in a real app, this would persist)
+                AUTH_CONFIG.mockUsers.push(newUser);
+                
+                // Create mock token
+                const token = btoa(`${newUser.email}:${Date.now()}`);
+                resolve({
+                    token,
+                    user: {
+                        email: newUser.email,
+                        name: newUser.name
+                    }
+                });
+            }, 800); // Simulate network delay
+        });
+    },
+    
+    /**
+     * Verify authentication token
+     * @param {string} token - Authentication token
+     * @returns {Promise} - Resolves with user data if valid
+     */
+    verifyToken: async function(token) {
+        // Try real backend first if available
+        if (!AUTH_CONFIG.useMockAuth) {
+            try {
+                const response = await fetch(`${AUTH_CONFIG.apiBaseUrl}${AUTH_CONFIG.verifyTokenEndpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Invalid token');
+                }
+                
+                const data = await response.json();
+                return data.user;
+            } catch (error) {
+                console.warn('Real backend token verification failed, falling back to mock:', error);
+                // Fall back to mock auth if real backend fails
+                if (!AUTH_CONFIG.useMockAuth) throw error;
+            }
+        }
+        
+        // Mock token verification
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                try {
+                    // Decode token (in a real app, use proper JWT verification)
+                    const tokenData = atob(token).split(':');
+                    const email = tokenData[0];
+                    const timestamp = parseInt(tokenData[1]);
+                    
+                    // Check if token is expired
+                    if (Date.now() - timestamp > AUTH_CONFIG.tokenExpiry) {
+                        reject(new Error('Token expired'));
+                        return;
+                    }
+                    
+                    // Find user
+                    const user = AUTH_CONFIG.mockUsers.find(u => u.email === email);
+                    if (!user) {
+                        reject(new Error('User not found'));
+                        return;
+                    }
+                    
+                    resolve({
+                        email: user.email,
+                        name: user.name
+                    });
+                } catch (e) {
+                    reject(new Error('Invalid token'));
+                }
+            }, 300);
+        });
+    },
+    
+    /**
+     * Log out the current user
+     */
+    logout: function() {
+        localStorage.removeItem(AUTH_CONFIG.tokenKey);
+        localStorage.removeItem(AUTH_CONFIG.userKey);
+    }
+};
+
+/**
+ * Authentication Session Manager
+ */
+const AuthSession = {
+    /**
+     * Get the current authenticated user
+     * @returns {Object|null} - User object or null if not authenticated
+     */
+    getCurrentUser: function() {
+        const userJson = localStorage.getItem(AUTH_CONFIG.userKey);
+        return userJson ? JSON.parse(userJson) : null;
+    },
+    
+    /**
+     * Get the authentication token
+     * @returns {string|null} - Token or null if not authenticated
+     */
+    getToken: function() {
+        return localStorage.getItem(AUTH_CONFIG.tokenKey);
+    },
+    
+    /**
+     * Set the current session
+     * @param {Object} authData - Authentication data with token and user
+     */
+    setSession: function(authData) {
+        localStorage.setItem(AUTH_CONFIG.tokenKey, authData.token);
+        localStorage.setItem(AUTH_CONFIG.userKey, JSON.stringify(authData.user));
+    },
+    
+    /**
+     * Check if user is authenticated
+     * @returns {boolean} - True if authenticated
+     */
+    isAuthenticated: function() {
+        return !!this.getToken();
+    },
+    
+    /**
+     * Initialize authentication - verify token if exists
+     * @returns {Promise} - Resolves when complete
+     */
+    init: async function() {
+        const token = this.getToken();
+        if (!token) return false;
+        
+        try {
+            const user = await AuthAPI.verifyToken(token);
+            this.setSession({ token, user });
+            return true;
+        } catch (error) {
+            console.warn('Token verification failed:', error);
+            this.logout();
+            return false;
+        }
+    },
+    
+    /**
+     * Log in a user
+     * @param {string} email - User email
+     * @param {string} password - User password
+     * @returns {Promise} - Resolves with user data
+     */
+    login: async function(email, password) {
+        const authData = await AuthAPI.login(email, password);
+        this.setSession(authData);
+        return authData.user;
+    },
+    
+    /**
+     * Register a new user
+     * @param {Object} userData - User registration data
+     * @returns {Promise} - Resolves with user data
+     */
+    signup: async function(userData) {
+        const authData = await AuthAPI.signup(userData);
+        this.setSession(authData);
+        return authData.user;
+    },
+    
+    /**
+     * Log out the current user
+     */
+    logout: function() {
+        AuthAPI.logout();
+        window.location.href = '/';
+    }
+};
+
+// Initialize authentication on page load
+document.addEventListener('DOMContentLoaded', function() {
+    AuthSession.init().then(isAuthenticated => {
+        if (isAuthenticated) {
+            console.log('User authenticated:', AuthSession.getCurrentUser());
+            // Update UI for authenticated user
+            updateAuthUI(true);
+        }
+    });
+});
+
+/**
+ * Update UI based on authentication status
+ * @param {boolean} isAuthenticated - Whether user is authenticated
+ */
+function updateAuthUI(isAuthenticated) {
+    const loginBtn = document.querySelector('.login-btn');
+    const signupBtn = document.querySelector('.signup-btn');
+    
+    if (isAuthenticated) {
+        const user = AuthSession.getCurrentUser();
+        
+        // If login/signup buttons exist, replace with user info
+        if (loginBtn) {
+            const userMenu = document.createElement('div');
+            userMenu.className = 'user-menu';
+            userMenu.innerHTML = `
+                <span class="user-name">Welcome, ${user.name || user.email}</span>
+                <button class="btn btn-outline logout-btn">Log Out</button>
+            `;
+            loginBtn.parentNode.replaceChild(userMenu, loginBtn);
+            
+            // Add logout handler
+            document.querySelector('.logout-btn').addEventListener('click', function() {
+                AuthSession.logout();
+            });
+        }
+        
+        // Hide signup button if it exists
+        if (signupBtn) {
+            signupBtn.style.display = 'none';
+        }
+    }
+}
+
+/**
  * Show authentication modal for login or signup
  * @param {string} type - 'login' or 'signup'
  */
@@ -102,7 +459,7 @@ function showAuthModal(type) {
     }
     
     // Add form submission handler
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         // Get form values
@@ -115,34 +472,63 @@ function showAuthModal(type) {
             return;
         }
         
-        if (type === 'signup') {
-            const confirmPassword = document.getElementById('confirm-password').value;
-            if (password !== confirmPassword) {
-                alert('Passwords do not match');
-                return;
-            }
-        }
-        
-        // Here you would typically make an API call to your backend
-        console.log(`${type === 'login' ? 'Logging in' : 'Signing up'} with email: ${email}`);
-        
-        // Show success message
+        // Disable form elements during authentication
         const formElements = form.querySelectorAll('input, button');
         formElements.forEach(el => el.disabled = true);
         
-        const successMessage = document.createElement('div');
-        successMessage.className = 'auth-success';
-        successMessage.textContent = type === 'login' 
-            ? 'Login successful! Redirecting...' 
-            : 'Account created successfully! Redirecting...';
+        // Show loading message
+        const loadingMessage = document.createElement('div');
+        loadingMessage.className = 'auth-loading';
+        loadingMessage.textContent = type === 'login' 
+            ? 'Logging in...' 
+            : 'Creating your account...';
+        form.appendChild(loadingMessage);
         
-        form.appendChild(successMessage);
-        
-        // Simulate redirect after 2 seconds
-        setTimeout(() => {
-            modal.remove();
-            alert(`${type === 'login' ? 'Login' : 'Signup'} successful! This is a demo - in a real app, you would be redirected to the dashboard.`);
-        }, 2000);
+        try {
+            if (type === 'signup') {
+                const confirmPassword = document.getElementById('confirm-password').value;
+                if (password !== confirmPassword) {
+                    throw new Error('Passwords do not match');
+                }
+                
+                // Additional fields for signup
+                const name = email.split('@')[0]; // Simple name extraction from email
+                
+                // Register the user
+                await AuthSession.signup({
+                    email,
+                    password,
+                    name
+                });
+            } else {
+                // Login the user
+                await AuthSession.login(email, password);
+            }
+            
+            // Show success message
+            loadingMessage.className = 'auth-success';
+            loadingMessage.textContent = type === 'login' 
+                ? 'Login successful! Redirecting...' 
+                : 'Account created successfully! Redirecting...';
+            
+            // Update UI to show authenticated state
+            updateAuthUI(true);
+            
+            // Close modal after a short delay
+            setTimeout(() => {
+                modal.remove();
+                // Redirect to dashboard or reload page
+                window.location.reload();
+            }, 1500);
+            
+        } catch (error) {
+            // Show error message
+            loadingMessage.className = 'auth-error';
+            loadingMessage.textContent = error.message || 'Authentication failed';
+            
+            // Re-enable form elements
+            formElements.forEach(el => el.disabled = false);
+        }
     });
     
     // Add submit button to form
@@ -243,6 +629,50 @@ function showAuthModal(type) {
             color: #155724;
             border-radius: 4px;
             text-align: center;
+        }
+        
+        .auth-loading {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #cce5ff;
+            color: #004085;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .auth-error {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8d7da;
+            color: #721c24;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-name {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .logout-btn {
+            padding: 8px 16px;
+            border: 1px solid #dc3545;
+            color: #dc3545;
+            background: transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .logout-btn:hover {
+            background-color: #dc3545;
+            color: white;
         }
     `;
     
