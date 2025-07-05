@@ -306,7 +306,7 @@ const AuthSession = {
      */
     logout: function() {
         AuthAPI.logout();
-        window.location.href = '/';
+        window.location.href = '/frontend/';
     }
 };
 
@@ -517,8 +517,8 @@ function showAuthModal(type) {
             // Close modal after a short delay
             setTimeout(() => {
                 modal.remove();
-                // Redirect to dashboard or reload page
-                window.location.reload();
+                // Redirect to dashboard
+                window.location.href = 'dashboard.html';
             }, 1500);
             
         } catch (error) {
