@@ -22,10 +22,10 @@ import os
 # Add the parent directory to sys.path to enable imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from backend.data.mcp_integration import CoinGeckoMCP
-from backend.agents.mcp_strategy import MCPStrategyAgent, MarketContext
-from backend.training.memory import QdrantMemory
-from backend.training.evolver import AgentEvolver
+from backend.mcp.protocol import ModelContextProtocol
+from backend.mcp.context import AgentContext
+from backend.mcp.memory import VectorMemory
+from backend.mcp.orchestrator import AgentOrchestrator
 from backend.utils.config import get_config_value
 
 logger = logging.getLogger(__name__)
@@ -46,11 +46,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize components
-mcp_client = CoinGeckoMCP()
-strategy_agent = MCPStrategyAgent()
-memory = QdrantMemory()
-evolver = AgentEvolver()
+# Initialize MCP components
+mcp = ModelContextProtocol()
+memory = VectorMemory(
+    storage_type="qdrant",
+    collection_name="autotradex_memories",
+    qdrant_url=get_config_value("qdrant.url", None),
+    qdrant_api_key=get_config_value("qdrant.api_key", None)
+)
+# Initialize the orchestrator with default parameters
+orchestrator = AgentOrchestrator(use_langgraph=False)
 
 # WebSocket connections
 active_connections: List[WebSocket] = []
@@ -74,12 +79,28 @@ async def health_check():
 async def get_market_regime():
     """Get current market regime"""
     try:
-        mcp_data = mcp_client.get_current_mcp()
-        regime = mcp_client.classify_regime(mcp_data)
+        # Create a new context for this request
+        context = mcp.create_context()
+        
+        # Use the orchestrator to get market data
+        market_data = await orchestrator.get_market_data(context.id)
+        
+        # Classify the market regime
+        btc_dominance = market_data.get("btc_dominance", 0)
+        eth_dominance = market_data.get("eth_dominance", 0)
+        
+        # Simple classification logic
+        if btc_dominance > 52:
+            regime = "BTC_DOMINANT"
+        elif eth_dominance > 20 and btc_dominance < 45:
+            regime = "ALT_SEASON"
+        else:
+            regime = "NEUTRAL"
+            
         return {
             "regime": regime,
-            "btc_dominance": mcp_data.get("btc_mcp"),
-            "eth_dominance": mcp_data.get("eth_mcp"),
+            "btc_dominance": btc_dominance,
+            "eth_dominance": eth_dominance,
             "timestamp": datetime.now().isoformat()
         }
     except Exception as e:
@@ -90,8 +111,16 @@ async def get_market_regime():
 async def get_market_context():
     """Get comprehensive market context"""
     try:
-        context = mcp_client.get_market_context()
-        return context
+        # Create a new context for this request
+        agent_context = mcp.create_context()
+        
+        # Use the orchestrator to get market data
+        market_data = await orchestrator.get_market_data(agent_context.id)
+        
+        # Add additional context information
+        market_data["timestamp"] = datetime.now().isoformat()
+        
+        return market_data
     except Exception as e:
         logger.error(f"Error getting market context: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -100,19 +129,20 @@ async def get_market_context():
 async def generate_strategy(request: Dict[str, Any]):
     """Generate a trading strategy"""
     try:
-        # Create market context
-        context = MarketContext(
-            btc_dominance=request.get("btc_dominance", 0),
-            market_regime=request.get("market_regime", "NEUTRAL"),
-            sectors=request.get("sectors", ["DeFi", "AI", "Gaming"]),
-            portfolio_value=request.get("portfolio_value", 10000),
-            risk_profile=request.get("risk_profile", "moderate"),
-            recent_trades=request.get("recent_trades", "No trades"),
-            portfolio_change=request.get("portfolio_change", 0)
-        )
+        # Create a new context for this request
+        agent_context = mcp.create_context()
         
-        # Generate strategy
-        strategy = strategy_agent.generate_strategy(context)
+        # Add request data to context
+        for key, value in request.items():
+            mcp.update_context_state(agent_context.id, key, value)
+        
+        # Generate strategy using the orchestrator
+        strategy = await orchestrator.generate_strategy(
+            context_id=agent_context.id,
+            market_regime=request.get("market_regime", "NEUTRAL"),
+            portfolio_value=request.get("portfolio_value", 10000),
+            risk_profile=request.get("risk_profile", "moderate")
+        )
         
         # Broadcast to websocket clients
         await broadcast_event("strategy_generated", {
@@ -129,14 +159,14 @@ async def generate_strategy(request: Dict[str, Any]):
 async def record_memory(memory_data: Dict[str, Any]):
     """Record a trade outcome in memory"""
     try:
-        success = memory.record(
+        memory_id = memory.record_trade_outcome(
             strategy_id=memory_data.get("strategy_id", "unknown"),
             outcome=memory_data.get("outcome", 1.0),
             market_conditions=memory_data.get("market_conditions", {}),
             lessons=memory_data.get("lessons", [])
         )
         
-        return {"success": success}
+        return {"success": bool(memory_id), "memory_id": memory_id}
     except Exception as e:
         logger.error(f"Error recording memory: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -145,7 +175,7 @@ async def record_memory(memory_data: Dict[str, Any]):
 async def get_similar_memories(query: str, limit: int = 5):
     """Get memories similar to the query"""
     try:
-        memories = memory.retrieve_similar(query, limit)
+        memories = memory.retrieve_similar(query, n_results=limit)
         return {"memories": memories}
     except Exception as e:
         logger.error(f"Error retrieving similar memories: {e}")
@@ -155,7 +185,9 @@ async def get_similar_memories(query: str, limit: int = 5):
 async def get_regime_memories(regime: str, limit: int = 10):
     """Get memories for a specific market regime"""
     try:
-        memories = memory.retrieve_by_regime(regime, limit)
+        # Use filter to get memories for a specific regime
+        filter_condition = {"market_conditions.market_regime": regime}
+        memories = memory.retrieve_similar("", n_results=limit, filter=filter_condition)
         return {"memories": memories}
     except Exception as e:
         logger.error(f"Error retrieving regime memories: {e}")
@@ -165,8 +197,24 @@ async def get_regime_memories(regime: str, limit: int = 10):
 async def get_regime_performance(regime: str):
     """Get performance statistics for a specific market regime"""
     try:
-        performance = memory.get_regime_performance(regime)
-        return performance
+        # Use filter to get memories for a specific regime
+        filter_condition = {"market_conditions.market_regime": regime}
+        memories = memory.retrieve_similar("", n_results=100, filter=filter_condition)
+        
+        # Calculate performance statistics
+        if not memories:
+            return {"regime": regime, "avg_outcome": 0, "count": 0}
+            
+        outcomes = [mem.get("metadata", {}).get("outcome", 1.0) for mem in memories]
+        avg_outcome = sum(outcomes) / len(outcomes) if outcomes else 0
+        
+        return {
+            "regime": regime,
+            "avg_outcome": avg_outcome,
+            "count": len(memories),
+            "best_outcome": max(outcomes) if outcomes else 0,
+            "worst_outcome": min(outcomes) if outcomes else 0
+        }
     except Exception as e:
         logger.error(f"Error getting regime performance: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -177,11 +225,26 @@ async def evolve_strategy(request: Dict[str, Any]):
     try:
         regime = request.get("regime")
         if not regime:
-            # Get current regime if not specified
-            mcp_data = mcp_client.get_current_mcp()
-            regime = mcp_client.classify_regime(mcp_data)
+            # Create a new context for this request
+            agent_context = mcp.create_context()
+            
+            # Use the orchestrator to get market data
+            market_data = await orchestrator.get_market_data(agent_context.id)
+            
+            # Classify the market regime
+            btc_dominance = market_data.get("btc_dominance", 0)
+            eth_dominance = market_data.get("eth_dominance", 0)
+            
+            # Simple classification logic
+            if btc_dominance > 52:
+                regime = "BTC_DOMINANT"
+            elif eth_dominance > 20 and btc_dominance < 45:
+                regime = "ALT_SEASON"
+            else:
+                regime = "NEUTRAL"
         
-        result = evolver.evolve_agents(regime)
+        # Use the orchestrator to evolve strategies
+        result = await orchestrator.evolve_strategies(regime)
         
         # Broadcast to websocket clients
         await broadcast_event("evolution_complete", {
@@ -198,7 +261,9 @@ async def evolve_strategy(request: Dict[str, Any]):
 async def get_evolution_history(limit: int = 10):
     """Get history of evolved strategies"""
     try:
-        history = evolver.get_evolution_history(limit)
+        # Use filter to get evolution-related memories
+        filter_condition = {"type": "evolution"}
+        history = memory.retrieve_similar("", n_results=limit, filter=filter_condition)
         return {"history": history}
     except Exception as e:
         logger.error(f"Error getting evolution history: {e}")
