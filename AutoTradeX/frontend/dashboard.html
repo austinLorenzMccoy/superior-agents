@@ -207,13 +207,13 @@
                 <div class="dashboard-card">
                     <h3>AI Strategy Recommendations</h3>
                     <p>Based on current market conditions, our AI recommends:</p>
-                    <ul>
+                    <ul id="strategy-recommendations">
                         <li>Increase BTC allocation by 5%</li>
                         <li>Consider adding SOL to your portfolio</li>
                         <li>Set stop-loss for ETH at $2,700</li>
                     </ul>
                     <div class="actions-container">
-                        <button class="action-btn">Generate New Strategy</button>
+                        <button class="action-btn" id="generate-strategy-btn">Generate New Strategy</button>
                     </div>
                 </div>
 
@@ -305,6 +305,102 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="./src/assets/auth.js"></script>
     <script>
+        // AI Strategy Generator
+        const strategyRecommendations = [
+            [
+                "Increase BTC allocation by 5%",
+                "Consider adding SOL to your portfolio",
+                "Set stop-loss for ETH at $2,700"
+            ],
+            [
+                "Reduce exposure to altcoins by 10%",
+                "Accumulate BTC during dips below $47,000",
+                "Consider dollar-cost averaging into ETH"
+            ],
+            [
+                "Implement a 60/30/10 allocation (BTC/ETH/Alts)",
+                "Set up automated buys on 5% market dips",
+                "Consider taking profits on SOL above $110"
+            ],
+            [
+                "Explore DeFi yield opportunities for stable assets",
+                "Hedge your portfolio with 5% allocation to inverse ETFs",
+                "Consider reducing leverage during high volatility"
+            ],
+            [
+                "Rotate 15% of holdings from BTC to ETH",
+                "Set up trailing stop losses at 12%",
+                "Consider adding LINK to your portfolio"
+            ],
+            [
+                "Maintain higher cash reserves (20-30%) for upcoming volatility",
+                "Focus on blue-chip cryptocurrencies",
+                "Consider profit-taking on positions up more than 25%"
+            ],
+            [
+                "Implement a grid trading strategy for BTC",
+                "Diversify with 5% allocation to privacy coins",
+                "Consider reducing ETH exposure until the next protocol upgrade"
+            ],
+            [
+                "Increase stablecoin allocation to 25%",
+                "Look for entry points in oversold gaming tokens",
+                "Consider hedging with options for major holdings"
+            ]
+        ];
+        
+        function generateNewStrategy() {
+            const strategyList = document.getElementById('strategy-recommendations');
+            const generateBtn = document.getElementById('generate-strategy-btn');
+            
+            // Disable button and show loading state
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generating...';
+            
+            // Simulate AI processing time
+            setTimeout(() => {
+                // Select a random strategy that's different from the current one
+                let currentStrategy = [];
+                Array.from(strategyList.children).forEach(li => {
+                    currentStrategy.push(li.textContent);
+                });
+                
+                let newStrategyIndex;
+                let newStrategy;
+                
+                do {
+                    newStrategyIndex = Math.floor(Math.random() * strategyRecommendations.length);
+                    newStrategy = strategyRecommendations[newStrategyIndex];
+                } while (newStrategy.every((item, index) => item === currentStrategy[index]) && strategyRecommendations.length > 1);
+                
+                // Clear current list items
+                strategyList.innerHTML = '';
+                
+                // Add new recommendations
+                newStrategy.forEach(recommendation => {
+                    const li = document.createElement('li');
+                    li.textContent = recommendation;
+                    
+                    // Add a fade-in animation
+                    li.style.opacity = '0';
+                    li.style.transform = 'translateY(10px)';
+                    li.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    
+                    strategyList.appendChild(li);
+                    
+                    // Trigger animation
+                    setTimeout(() => {
+                        li.style.opacity = '1';
+                        li.style.transform = 'translateY(0)';
+                    }, 50 * strategyList.children.length);
+                });
+                
+                // Reset button
+                generateBtn.disabled = false;
+                generateBtn.textContent = 'Generate New Strategy';
+            }, 1500); // Simulate AI processing time
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
             // Check if user is authenticated
             if (!AuthSession.isAuthenticated()) {
@@ -386,6 +482,9 @@
             menuToggle.addEventListener('click', function() {
                 nav.classList.toggle('active');
             });
+            
+            // Add event listener for the Generate New Strategy button
+            document.getElementById('generate-strategy-btn').addEventListener('click', generateNewStrategy);
         });
     </script>
 </body>
