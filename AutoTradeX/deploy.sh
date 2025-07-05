@@ -1,16 +1,46 @@
 #!/bin/bash
 # AutoTradeX Deployment Script
-# This script helps deploy the AutoTradeX application to Render and Netlify
-
 echo "🚀 AutoTradeX Deployment Script"
 echo "==============================="
 
-# Check if render-cli is installed
-if ! command -v render &> /dev/null; then
-    echo "❌ render-cli not found. Please install it first:"
-    echo "npm install -g @render/cli"
-    exit 1
+# Parse command line arguments
+DEPLOY_BACKEND=false
+DEPLOY_FRONTEND=false
+
+# If no arguments, deploy both
+if [ $# -eq 0 ]; then
+    DEPLOY_FRONTEND=true
+    # Only try to deploy backend if render CLI is available
+    if command -v render &> /dev/null; then
+        DEPLOY_BACKEND=true
+    else
+        echo "⚠️ render-cli not found. Only deploying frontend."
+        echo "To deploy backend, install render-cli: npm install -g @render/cli"
+    fi
 fi
+
+# Process arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --frontend)
+            DEPLOY_FRONTEND=true
+            ;;
+        --backend)
+            if ! command -v render &> /dev/null; then
+                echo "❌ render-cli not found. Please install it first:"
+                echo "npm install -g @render/cli"
+                exit 1
+            fi
+            DEPLOY_BACKEND=true
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: $0 [--frontend] [--backend]"
+            exit 1
+            ;;
+    esac
+    shift
+done
 
 # Check if netlify-cli is installed
 if ! command -v netlify &> /dev/null; then
@@ -61,13 +91,11 @@ echo "Pushing latest changes to GitHub..."
 git push origin main
 
 # 3. Deploy backend and frontend
-read -p "Deploy backend to Render? (y/n): " deploy_back
-if [[ $deploy_back == "y" ]]; then
+if [[ $DEPLOY_BACKEND == true ]]; then
     deploy_backend
 fi
 
-read -p "Deploy frontend to Netlify? (y/n): " deploy_front
-if [[ $deploy_front == "y" ]]; then
+if [[ $DEPLOY_FRONTEND == true ]]; then
     deploy_frontend
 fi
 
