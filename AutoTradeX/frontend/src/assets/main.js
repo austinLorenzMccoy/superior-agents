@@ -1,4 +1,23 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Auth button handlers
+    const loginBtn = document.querySelector('.auth-buttons .btn-outline');
+    const signupBtn = document.querySelector('.auth-buttons .btn-primary');
+    
+    if (loginBtn) {
+        loginBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Show login modal or redirect to login page
+            showAuthModal('login');
+        });
+    }
+    
+    if (signupBtn) {
+        signupBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Show signup modal or redirect to signup page
+            showAuthModal('signup');
+        });
+    }
     // Mobile menu toggle
     const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
     const navLinks = document.querySelector('.nav-links');
