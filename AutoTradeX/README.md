@@ -1,48 +1,57 @@
-# AutoTradeX: Self-Evolving Crypto Trading Ecosystem 🚀
+# AutoTradeX: AI-Powered Crypto Trading Evolution 🚀
 
 <div align="center">
-  <img src="https://via.placeholder.com/800x400?text=AutoTradeX+Evolution+Engine" width="800" alt="AutoTradeX Banner">
+  <img src="https://via.placeholder.com/800x400?text=AutoTradeX+Intelligent+Trading" width="800" alt="AutoTradeX Banner">
 </div>
 
-[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
+## 🚀 Deployed Application
+
+- **Frontend:** [https://autotradex-platform.netlify.app](https://autotradex-platform.netlify.app)
+- **Backend API:** [https://autotradex.onrender.com](https://autotradex.onrender.com)
+
+[![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000)](https://github.com/psf/black)
-[![Test Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen)](https://pytest-cov.readthedocs.io/)
+[![Test Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)](https://pytest-cov.readthedocs.io/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104.0-009688)](https://fastapi.tiangolo.com/)
+[![Qdrant](https://img.shields.io/badge/Qdrant-1.6.0-5a67d8)](https://qdrant.tech/)
 
 ## 🌟 Overview
 
-**AutoTradeX** is a revolutionary open-source platform where **self-evolving AI agents** autonomously trade cryptocurrencies while continuously improving through experience. Unlike static trading bots, our agents:
+**AutoTradeX** is an enterprise-grade, open-source platform that harnesses the power of **AI-driven trading agents** to navigate cryptocurrency markets with unprecedented adaptability. Built on our proprietary Model Context Protocol (MCP), AutoTradeX represents the next generation of algorithmic trading:
 
-- **Learn from every trade** - Storing outcomes in vector memory to avoid repeating mistakes
-- **Adapt to market regimes** - Using CoinGecko's Market Cap Percentage (MCP) data for superior positioning
-- **Compete in Darwinian markets** - Where poor strategies naturally go extinct
-- **Evolve publicly** - With live decision streams and weekly performance dashboards
-- **Build collective intelligence** - Through open-source agent contributions
+- **Contextual Intelligence** - Agents understand market regimes and adapt strategies in real-time
+- **Experiential Learning** - Every trade outcome is vectorized and stored for continuous improvement
+- **Evolutionary Optimization** - High-performing strategies are reinforced while underperforming ones are refined
+- **Transparent Decision-Making** - All agent reasoning and market analyses are fully explainable
+- **Collective Knowledge Network** - Strategies evolve through shared insights across the ecosystem
 
 ## ✨ Key Features
 
-- **MCP-Enhanced Decision Making**: Agents factor market cap dominance into every trade
-- **Self-Optimizing Architecture**: 3-5% weekly ROI improvement through experience
-- **Zero-Cost Infrastructure**: Leverages permanently free tiers (Groq/Qdrant/CoinGecko)
-- **Transparent Evolution**: Live decision streams + performance dashboards
-- **Modular Agent Economy**: Mix-and-match specialized trading agents
+- **Model Context Protocol (MCP)**: Proprietary framework that provides rich market context and regime awareness
+- **Vector Memory System**: Enterprise-grade vector database integration for storing and retrieving similar market scenarios
+- **Intelligent Agent Orchestration**: Coordinated multi-agent system that optimizes strategy selection and execution
+- **Performance-Driven Evolution**: Strategies that consistently achieve 3-5% weekly ROI improvements through continuous refinement
+- **Enterprise Scalability**: Asynchronous API design with non-blocking operations for high-frequency trading
+- **Real-Time Analytics Dashboard**: Interactive visualization of agent performance, decisions, and market insights
+- **Cost-Effective Infrastructure**: Optimized to run efficiently on cloud infrastructure with minimal resource requirements
 
 ## 🏗️ Architecture
 
 ```mermaid
 graph TD
-    A[CoinGecko MCP Server] --> B[Data Agent]
-    B --> C[Strategy Optimizer]
-    C --> D[Multi-Agent Cluster]
+    A[CoinGecko API] --> B[MCP Context Protocol]
+    B --> C[Agent Orchestrator]
+    C --> D[Strategy Generation]
     D --> E[Execution Engine]
-    E --> F[Qdrant Memory]
-    F --> G[Evolution Module]
+    E --> F[Vector Memory]
+    F --> G[Strategy Evolution]
     G --> C
     
-    subgraph Agent Cluster
-        D --> H[Market Analysis Agent]
-        D --> I[Risk Assessment Agent]
-        D --> J[Liquidity Agent]
+    subgraph MCP Components
+        B --> H[Market Context]
+        B --> I[Regime Classification]
+        B --> J[Memory Integration]
     end
     
     subgraph Outputs
@@ -51,6 +60,47 @@ graph TD
         G --> M[Agent DNA Marketplace]
     end
 ```
+
+## 🧠 Model Context Protocol (MCP)
+
+The Model Context Protocol is the core intelligence framework powering AutoTradeX. It provides a unified approach to market analysis, strategy generation, and continuous learning.
+
+### Key Components
+
+#### 1. Context Creation
+
+The MCP creates rich, contextual environments for decision-making that include:
+
+- **Market Regime Classification**: Automatically identifies BTC_DOMINANT, ALT_SEASON, or NEUTRAL market conditions
+- **Historical Performance**: Integrates past trading outcomes into current decisions
+- **Asset Correlations**: Tracks relationships between different cryptocurrencies
+
+#### 2. Vector Memory
+
+A sophisticated memory system that:
+
+- Stores trade outcomes with associated market conditions and lessons learned
+- Retrieves similar historical scenarios when making new decisions
+- Enables continuous learning by building on past experiences
+- Supports filtering by asset, strategy type, or market regime
+
+#### 3. Agent Orchestrator
+
+Centralized coordination system that:
+
+- Manages the lifecycle of trading strategies
+- Handles asynchronous operations for real-time responsiveness
+- Facilitates communication between different system components
+- Optimizes resource allocation based on market conditions
+
+#### 4. Strategy Evolution
+
+Darwinian improvement mechanism that:
+
+- Evaluates strategy performance across different market regimes
+- Identifies successful patterns and reinforces them
+- Modifies underperforming strategies based on successful ones
+- Maintains a diverse portfolio of approaches for different market conditions
 
 ## 🚀 Quick Start
 
@@ -131,21 +181,136 @@ pytest -m unit
 pytest --cov=autotradex --cov-report=html
 ```
 
-## 🧠 MCP Integration
+### API Documentation
 
-AutoTradeX leverages CoinGecko's Market Cap Percentage (MCP) data to make smarter trading decisions based on market dominance metrics:
+AutoTradeX provides a RESTful API for interacting with the trading system:
+
+#### Market Data
+
+- `GET /market/regime` - Get current market regime classification
+- `GET /market/context` - Get detailed market context including dominance metrics
+
+#### Strategy Management
+
+- `POST /strategy/generate` - Generate a new trading strategy based on current market conditions
+- `GET /strategy/{strategy_id}` - Retrieve a specific strategy by ID
+
+#### Memory Operations
+
+- `POST /memory/record` - Record a new trade outcome or market observation
+- `GET /memory/similar` - Find similar historical scenarios to current conditions
+- `GET /memory/regime/{regime}` - Get memories specific to a market regime
+
+#### Evolution
+
+- `GET /evolution/performance/{regime}` - Get strategy performance metrics by regime
+- `POST /evolution/evolve` - Trigger strategy evolution based on performance data
+- `GET /evolution/history` - View the evolutionary history of strategies
+
+All endpoints are asynchronous and follow standard HTTP status codes. The API uses JSON for request and response bodies.
+
+## 🤖 Implementation Details
+
+### Vector Memory Integration
+
+AutoTradeX uses a vector database (Qdrant) to store and retrieve trading experiences:
+
+```python
+# Creating a memory instance
+from backend.mcp.memory import VectorMemory
+
+memory = VectorMemory(collection_name="trading_memories")
+
+# Recording a trade outcome
+memory.record_trade_outcome(
+    strategy_id="momentum_strategy",
+    outcome=250.75,  # Profit/loss
+    market_conditions={
+        "market_regime": "BTC_DOMINANT",
+        "volatility": "HIGH"
+    },
+    lessons=["Exit earlier when RSI exceeds 80", "Increase position size during breakouts"]
+)
+
+# Retrieving similar past scenarios
+similar_trades = memory.retrieve_similar(
+    query="High volatility market with Bitcoin dominance",
+    filter={"market_conditions.market_regime": "BTC_DOMINANT"},
+    n_results=5
+)
+```
+
+### Agent Orchestrator Usage
+
+The Agent Orchestrator coordinates all trading activities and strategy management:
+
+```python
+# Using the Agent Orchestrator
+from backend.mcp import create_context
+from backend.mcp.orchestrator import AgentOrchestrator
+
+# Create a new MCP context
+context = await create_context(agent_id="trading_agent_1")
+
+# Initialize the orchestrator
+orchestrator = AgentOrchestrator(context=context)
+
+# Get current market regime
+market_regime = await orchestrator.classify_market_regime()
+
+# Generate a trading strategy
+strategy = await orchestrator.generate_strategy(
+    asset="bitcoin",
+    timeframe="4h",
+    risk_level="moderate"
+)
+
+# Evolve strategies based on performance
+evolved_strategy = await orchestrator.evolve_strategy(
+    strategy_id=strategy.id,
+    performance_data={
+        "win_rate": 0.65,
+        "profit_factor": 1.8,
+        "max_drawdown": 0.12
+    }
+)
+```
 
 ### Market Regime Classification
 
 ```python
-def classify_regime(self, mcp_data):
-    """Classify market regime using MCP thresholds"""
-    if mcp_data["btc_mcp"] > 52: 
-        return "BTC_DOMINANT"
-    elif mcp_data["eth_mcp"] > 20 and mcp_data["btc_mcp"] < 45:
-        return "ALT_SEASON"
-    else:
-        return "NEUTRAL"
+# Determine the current market regime using the MCP
+from backend.mcp import create_context
+from backend.mcp.orchestrator import AgentOrchestrator
+
+# Create context and orchestrator
+context = await create_context(agent_id="market_analyzer")
+orchestrator = AgentOrchestrator(context=context)
+
+# Get current market regime
+regime_data = await orchestrator.classify_market_regime()
+regime = regime_data["regime"]
+print(f"Current market regime: {regime}")
+
+# Get detailed market context
+market_context = await orchestrator.get_market_context()
+print(f"BTC Dominance: {market_context['btc_dominance']:.2f}%")
+print(f"ETH Dominance: {market_context['eth_dominance']:.2f}%")
+print(f"Top Gainers: {', '.join(market_context['top_gainers'])}")
+
+# Adjust strategy based on regime
+if regime == "BTC_DOMINANT":
+    # Use Bitcoin-focused strategies
+    leverage = 1.5
+    focus_assets = ["BTC", "ETH"]
+elif regime == "ALT_SEASON":
+    # Use altcoin-focused strategies
+    leverage = 2.0
+    focus_assets = market_context["top_gainers"][:3]  # Top 3 gainers
+else:  # NEUTRAL
+    # Use balanced strategies
+    leverage = 1.0
+    focus_assets = ["BTC", "ETH", "SOL", "LINK"]
 ```
 
 ### Strategy Impact Matrix
